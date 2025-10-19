@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
+import '../provider/base_url.dart';
+import '../provider/site_provider.dart';
 import 'customdrawer.dart';
 import 'footer.dart';
 import 'home_screen.dart';
@@ -24,6 +27,9 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
 
   @override
   Widget build(BuildContext context) {
+    final siteProvider = Provider.of<SiteProvider>(context);
+    final site = siteProvider.siteData;
+    final logoUrl = "$backendUrl/images/${site?.logo}";
     return Scaffold(
       // appBar: AppBar(title: Text("Add Money")),
       drawer: CustomDrawer(),
@@ -40,9 +46,8 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
                   MaterialPageRoute(builder: (context) => HomeScreen()),
                 );
               },
-              child: Image.asset(
-                "assets/logo.png",
-                height: 30,
+              // child: Image.asset("assets/logo.png", height: 30,
+              child: Image.network(logoUrl, height: 30,
               ),
             ),
           ],

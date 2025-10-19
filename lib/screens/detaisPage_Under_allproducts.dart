@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../provider/base_url.dart';
+import '../provider/site_provider.dart' show SiteProvider;
 import 'addMoneyPage.dart';
 import 'customdrawer.dart';
 import 'footer.dart';
@@ -12,6 +15,9 @@ class ProductDetailsPage_under_allproducts extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final siteProvider = Provider.of<SiteProvider>(context);
+    final site = siteProvider.siteData;
+    final logoUrl = "$backendUrl/images/${site?.logo}";
     return Scaffold(
       // appBar: AppBar(title: Text("Product Details")),
       drawer: CustomDrawer(),
@@ -28,9 +34,8 @@ class ProductDetailsPage_under_allproducts extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => HomeScreen()),
                 );
               },
-              child: Image.asset(
-                "assets/logo.png",
-                height: 30,
+              // child: Image.asset("assets/logo.png", height: 30,
+              child: Image.network(logoUrl, height: 30,
               ),
             ),
           ],

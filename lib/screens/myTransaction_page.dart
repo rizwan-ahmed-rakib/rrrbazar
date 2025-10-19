@@ -1,46 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/transaction_model.dart';
+import '../provider/user_transaction_provider.dart';
+import '../provider/base_url.dart';
+import '../provider/site_provider.dart';
 import 'customdrawer.dart';
 import 'footer.dart';
 import 'home_screen.dart';
 
-class MyTransactionsPage extends StatelessWidget {
+class MyTransactionsPage extends StatefulWidget {
   const MyTransactionsPage({super.key});
 
   @override
+  State<MyTransactionsPage> createState() => _MyTransactionsPageState();
+}
+
+class _MyTransactionsPageState extends State<MyTransactionsPage> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() =>
+        Provider.of<UserTransactionProvider>(context, listen: false)
+            .fetchTransactions());
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Example transactions. খালি list দিলে empty state দেখাবে
-
-    // final List<Map<String, String>> transactions = [];
-
-    // যদি transaction দেখাতে চাও:
-    final List<Map<String, String>> transactions = List.generate(
-      80,
-      (index) => {
-        "title": "Transaction #${index + 1}",
-        "details": "Details about transaction #${index + 1}",
-        "amount": "৳ ${(index + 1) * 100}"
-      },
-    );
+    final siteProvider = Provider.of<SiteProvider>(context);
+    final site = siteProvider.siteData;
+    final logoUrl = "$backendUrl/images/${site?.logo}";
+    final txProvider = Provider.of<UserTransactionProvider>(context);
 
     return Scaffold(
-      drawer: CustomDrawer(),
+      drawer: const CustomDrawer(),
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        // 🔥 ডিফল্ট Hamburger আইকন লুকিয়ে দিলাম
         title: Row(
           children: [
             GestureDetector(
               onTap: () {
-                // 🏠 এখানে তোমার HomeScreen এ নিয়ে যাও
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => HomeScreen()),
+                  MaterialPageRoute(builder: (context) =>  HomeScreen()),
                 );
               },
-              child: Image.asset(
-                "assets/logo.png",
-                height: 30,
-              ),
+              child: Image.network(logoUrl, height: 30),
             ),
           ],
         ),
@@ -49,12 +53,11 @@ class MyTransactionsPage extends StatelessWidget {
             builder: (context) {
               return InkWell(
                 onTap: () {
-                  Scaffold.of(context).openDrawer(); // ✅ Drawer open হবে
+                  Scaffold.of(context).openDrawer();
                 },
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     if (constraints.maxWidth < 400) {
-                      // Mobile এ শুধু Image
                       return const Padding(
                         padding: EdgeInsets.only(right: 10),
                         child: CircleAvatar(
@@ -62,12 +65,12 @@ class MyTransactionsPage extends StatelessWidget {
                         ),
                       );
                     } else {
-                      // Tablet/Desktop এ Full Profile
                       return Row(
                         children: const [
-                          CircleAvatar(backgroundImage: AssetImage("assets/user.png")),
+                          CircleAvatar(
+                              backgroundImage: AssetImage("assets/user.png")),
                           SizedBox(width: 6),
-                          Text("Hellowfarjan"),
+                          Text("Hello Farjan"),
                           Icon(Icons.arrow_drop_down),
                           SizedBox(width: 10),
                         ],
@@ -80,117 +83,92 @@ class MyTransactionsPage extends StatelessWidget {
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          if (transactions.isEmpty) {
-            // =====================
-            // যদি কোনো transaction না থাকে
-            // =====================
-            return Column(
-              children: [
-                Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Icon(Icons.account_balance_wallet_outlined,
-                            size: 70, color: Colors.grey),
-                        SizedBox(height: 20),
-                        Text(
-                          "Sorry",
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 6),
-                        Text(
-                          "We found nothing for you.",
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                 CustomFooter(),
-              ],
-            );
-          } else {
-            // =====================
-            // Transaction আছে → ListView + footer
-            // =====================
-            final listHeight = transactions.length * 90.0;
 
-            if (listHeight + 70 < constraints.maxHeight) {
-              // content কম → footer bottom
-              return Column(
-                children: [
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: transactions.length,
-                      itemBuilder: (context, index) {
-                        final tx = transactions[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 6),
-                          child: ListTile(
-                            leading: const Icon(Icons.account_balance_wallet,
-                                color: Colors.blue),
-                            title: Text(tx["title"]!),
-                            subtitle: Text(tx["details"]!),
-                            trailing: Text(
-                              tx["amount"] ?? "",
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green),
-                            ),
-                            onTap: () {},
-                          ),
-                        );
-                      },
-                    ),
+      // 🔥 Stack ব্যবহার করা হয়েছে Footer নিচে রাখার জন্য
+      body: Stack(
+        children: [
+          // 🔹 মূল কনটেন্ট
+          txProvider.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : txProvider.hasError
+              ? const Center(child: Text("❌ ডাটা লোড ব্যর্থ হয়েছে"))
+              : txProvider.transactions.isEmpty
+              ? Column(
+            children: const [
+              Expanded(
+                child: Center(
+                  child: Text(
+                    "কোন ট্রান্সাকশন পাওয়া যায়নি",
+                    style: TextStyle(fontSize: 16),
                   ),
-                   CustomFooter(),
-                ],
-              );
-            } else {
-              // content বেশি → scrollable
-              return SingleChildScrollView(
-                child: Column(
-                  children: [
-                    ListView.builder(
-                      physics: const NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
-                      itemCount: transactions.length,
-                      itemBuilder: (context, index) {
-                        final tx = transactions[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 6),
-                          child: ListTile(
-                            leading: const Icon(Icons.account_balance_wallet,
-                                color: Colors.blue),
-                            title: Text(tx["title"]!),
-                            subtitle: Text(tx["details"]!),
-                            trailing: Text(
-                              tx["amount"] ?? "",
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green),
-                            ),
-                            onTap: () {},
-                          ),
-                        );
-                      },
-                    ),
-                     CustomFooter(),
-                  ],
                 ),
-              );
-            }
-          }
-        },
+              ),
+              CustomFooter(), // ✅ Footer নিচে থাকবে
+            ],
+          )
+              : Padding(
+            padding: const EdgeInsets.only(bottom: 70),
+            // Footer এর জায়গা রেখে Scrollable কনটেন্ট
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child:
+              _buildTransactionTable(txProvider.transactions),
+            ),
+          ),
+
+          // 🔹 Footer নিচে স্থির থাকবে (সব সময় দৃশ্যমান বা শেষে দেখা যাবে)
+          const Align(
+            alignment: Alignment.bottomCenter,
+            child: CustomFooter(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTransactionTable(List<UserTransaction> transactions) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        headingRowColor: WidgetStatePropertyAll(Colors.grey.shade100),
+        border: TableBorder.all(color: Colors.grey.shade300, width: 0.8),
+        columns: const [
+          DataColumn(label: Text("Amount")),
+          DataColumn(label: Text("Number")),
+          DataColumn(label: Text("Status")),
+          DataColumn(label: Text("Date")),
+        ],
+        rows: transactions.map((tx) {
+          final isCompleted = tx.status.toLowerCase() == "completed";
+          return DataRow(cells: [
+            DataCell(Text(tx.amount.toString())),
+            DataCell(Text(tx.number)),
+            DataCell(
+              Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isCompleted
+                      ? Colors.green.shade100
+                      : Colors.red.shade100,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  tx.status,
+                  style: TextStyle(
+                    color: isCompleted
+                        ? Colors.green.shade700
+                        : Colors.red.shade700,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            DataCell(Text(tx.createdAt)),
+          ]);
+        }).toList(),
       ),
     );
   }
 }
+

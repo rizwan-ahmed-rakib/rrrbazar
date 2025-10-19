@@ -1,4 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/physics.dart';
+import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import '../provider/base_url.dart' show backendUrl;
+import '../provider/site_provider.dart';
 import 'addMoneyPage.dart';
 import 'customdrawer.dart';
 import 'footer.dart';
@@ -6,14 +13,19 @@ import 'home_screen.dart';
 
 class OrderSuggestionPage extends StatefulWidget {
   final String image, title, subtitle, price, description;
+  final int id;
 
   OrderSuggestionPage({
+    required this.id,
     required this.image,
     required this.title,
     required this.subtitle,
     required this.price,
     required this.description,
   });
+
+
+
 
   @override
   _OrderSuggestionPageState createState() => _OrderSuggestionPageState();
@@ -22,27 +34,74 @@ class OrderSuggestionPage extends StatefulWidget {
 class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
   final TextEditingController playerIdController = TextEditingController();
   final TextEditingController amountController = TextEditingController();
-
+  List<dynamic> rechargePacks = [];
+  bool isLoading = true;
   String selectedPayment = "RRR Bazar Wallet";
   double walletBalance = 0; // 🔥 Dummy balance
   int? selectedPackIndex;
 
+  @override
+  void initState() {
+    super.initState();
+    fetchRechargePacks();
+  }
+
+
+  Future<void> fetchRechargePacks() async {
+    try {
+      final url = Uri.parse(
+          '${backendUrl}/api/v1/topuppackage/${widget.id}');
+      final response = await http.get(url);
+
+      print("📡 Fetching: $url");
+      print("🔢 Status Code: ${response.statusCode}");
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+
+        print("✅ Full API Response:");
+        print(data); // পুরো JSON দেখতে
+
+        // এখন packages লিস্টটা বের করা যাক
+        final List<dynamic> packages = data['data']['packages'] ?? [];
+
+        print("📦 Extracted Packages:");
+        print(packages);
+
+        setState(() {
+          rechargePacks = packages;
+          isLoading = false;
+        });
+      } else {
+        print("❌ Failed with status: ${response.statusCode}");
+        setState(() => isLoading = false);
+      }
+    } catch (e, stackTrace) {
+      print("🚨 Error fetching recharge packs: $e");
+      print("🔍 StackTrace: $stackTrace");
+      setState(() => isLoading = false);
+    }
+  }
+
+
+
+
   // Static Recharge Packs (API হলে list এ আসবে)
 
-  final List<Map<String, dynamic>> rechargePacks = [
-    {"title": "🕒 Weekly Lite 📕", "price": 42},
-    {"title": "📘 Weekly (🤖 Ai)", "price": 150},
-    {"title": "📙 Monthly (🤖 Ai)", "price": 770},
-    {"title": "💎 25 Diamonds", "price": 22},
-    {"title": "💎 50 Diamonds", "price": 40},
-    {"title": "💎 115 Diamonds", "price": 78},
-    {"title": "💎 240 Diamonds", "price": 155},
-    {"title": "💎 610 Diamonds", "price": 399},
-    {"title": "💎 1240 Diamonds", "price": 799},
-    {"title": "💎 2530 Diamonds", "price": 1610},
-    {"title": "💎 5060 Diamonds", "price": 3210},
-    {"title": "💎 10,120 Diamonds", "price": 6400},
-  ];
+  // final List<Map<String, dynamic>> rechargePacks = [
+  //   {"title": "🕒 Weekly Lite 📕", "price": 42},
+  //   {"title": "📘 Weekly (🤖 Ai)", "price": 150},
+  //   {"title": "📙 Monthly (🤖 Ai)", "price": 770},
+  //   {"title": "💎 25 Diamonds", "price": 22},
+  //   {"title": "💎 50 Diamonds", "price": 40},
+  //   {"title": "💎 115 Diamonds", "price": 78},
+  //   {"title": "💎 240 Diamonds", "price": 155},
+  //   {"title": "💎 610 Diamonds", "price": 399},
+  //   {"title": "💎 1240 Diamonds", "price": 799},
+  //   {"title": "💎 2530 Diamonds", "price": 1610},
+  //   {"title": "💎 5060 Diamonds", "price": 3210},
+  //   {"title": "💎 10,120 Diamonds", "price": 6400},
+  // ];
 
   // --- Add Money Popup (Step 1 + Step 2 একসাথে) ---
   void _showAddMoneyPopup() {
@@ -441,7 +500,7 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
               children: [
                 // 🟦 Title Text
                 Text(
-                  pack["title"] ?? "",
+                  pack["name"] ?? "",
                   textAlign: TextAlign.center,
                   maxLines: 2, // সর্বোচ্চ ২ লাইন পর্যন্ত অনুমতি
                   overflow: TextOverflow.ellipsis,
@@ -477,9 +536,14 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
 
   @override
   Widget build(BuildContext context) {
+    final siteProvider = Provider.of<SiteProvider>(context);
+    final site = siteProvider.siteData;
+    final logoUrl = "$backendUrl/images/${site?.logo}";
+
     bool canBuy =
         (selectedPayment == "RRR Bazar Wallet" && walletBalance > 0) ||
         selectedPayment == "Auto Payment";
+
 
     return Scaffold(
       drawer: CustomDrawer(),
@@ -496,9 +560,8 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                   MaterialPageRoute(builder: (context) => HomeScreen()),
                 );
               },
-              child: Image.asset(
-                "assets/logo.png",
-                height: 30,
+              // child: Image.asset("assets/logo.png", height: 30,
+              child: Image.network(logoUrl, height: 30,
               ),
             ),
           ],
@@ -582,8 +645,14 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                 ),
               ),
 
-            Center(child: Image.asset(widget.image, width: 300)),
+            Center(child: Image.network(widget.image, width: 300)),
             SizedBox(height: 10),
+            Center(
+              child: Text(
+                widget.id.toString(), // <-- এখানে toString() ব্যবহার করো
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+            ),
             Center(
               child: Text(
                 widget.title,

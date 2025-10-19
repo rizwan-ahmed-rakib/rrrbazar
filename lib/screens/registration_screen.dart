@@ -1,5 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
+import '../provider/base_url.dart' show backendUrl, saveTokenToLocalStorage;
+import '../provider/site_provider.dart';
 import 'footer.dart';
 import 'home_screen.dart';
 import 'login.dart';
@@ -12,6 +19,148 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+
+
+  final GoogleSignIn _googleSignUp = GoogleSignIn(
+    clientId:
+    "895753625041-1eqels2t6o99ieit8mr157oqkt4sl4lu.apps.googleusercontent.com", // তোমার Web Client ID  Rizwan
+    // "895753625041-2f11rtjpcgt2rgq9rg3303hee3s5aa1g.apps.googleusercontent.com", // তোমার Android Client ID  Rizwan
+    // "590339419279-68oe6vvg86t9chn5ruj83okftjuji2d7.apps.googleusercontent.com", //  Web Client ID  RRRBazar
+    scopes: ['email', 'profile','openid'],
+  );
+
+
+  Future<void> _checkIfAlreadySignedUp() async {
+    final user = await _googleSignUp.signInSilently();
+    if (user != null) {
+      setState(() {
+      });
+      print("🔁 আগের signup পাওয়া গেছে: ${user.displayName}");
+    } else {
+      print("ℹ️ কোনো ইউজার signup করা নেই।");
+    }
+  }
+
+  Future<void> _handleGoogleSignUp() async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignUp.signIn();
+
+      if (googleUser == null) {
+        print("❌ ইউজার লগইন বাতিল করেছে।");
+        return;
+      }
+
+      // 🔹 Google Authentication থেকে টোকেন নেওয়া
+      final GoogleSignInAuthentication googleAuth =
+      await googleUser.authentication;
+
+      final idToken = googleAuth.idToken;
+      final accessToken =  googleAuth.accessToken;
+
+      print("🔹 ব্যবহৃত Google Client ID: ${_googleSignUp.clientId}");
+      print("✅ Google Login সফল!");
+      print("👤 নাম: ${googleUser.displayName}");
+      print("📧 ইমেইল: ${googleUser.email}");
+      print("🖼️ ছবি: ${googleUser.photoUrl}");
+      print("🔑 ID Token: $idToken");
+      print("🔑 Access Token: $accessToken");
+
+      // 🔹 যদি ID Token পাওয়া যায়, তাহলে সেটা ডিকোড করে দেখি
+      if (idToken != null) {
+        _printDecodedIdToken(idToken);
+      } else {
+        print("⚠️ Warning: ID Token পাওয়া যায়নি (সম্ভবত ভুল clientId ব্যবহৃত হয়েছে)।");
+      }
+
+      setState(() {
+      });
+
+      // 🔹 এখন Backend এ টোকেন পাঠানো হবে
+      await _sendTokenToBackend(idToken);
+
+    } catch (error) {
+      print("🔹 ব্যবহৃত Google Client ID: ${_googleSignUp.clientId}");
+
+      // print(
+      //     "🔹 ব্যবহৃত Redirect Scheme: com.googleusercontent.apps.895753625041-2f11rtjpcgt2rgq9rg3303hee3s5aa1g");
+
+      print("🚫 signup করতে সমস্যা হয়েছে: $error");
+    }
+  }
+
+  Future<void> _sendTokenToBackend(String? idToken) async {
+    if (idToken == null) {
+      print("❌ টোকেন পাওয়া যায়নি, Backend এ পাঠানো যাবে না।");
+      return;
+    }
+
+    final url = Uri.parse("$backendUrl/api/v1/google-signup");
+    final clientOrigin = "http://localhost:3000"; // 🔹 তোমার client origin এখানে থাকবে
+
+    try {
+      print("🔹 ব্যবহৃত Google Client ID: ${_googleSignUp.clientId}");
+      print("📡 টোকেন পাঠানো হচ্ছে সার্ভারে...");
+      print("🔗 API URL: $url");
+      print("🛰️ ব্যবহৃত x-client-origin: $clientOrigin"); // 👈 এখন কনসোলে দেখা যাবে
+
+      final response = await http.post(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "x-client-origin": clientOrigin, // ✅ এখানে ব্যবহার হচ্ছে
+        },
+        body: jsonEncode({"idToken": idToken}),
+      );
+
+      if (response.statusCode == 200) {
+        print("✅ সার্ভার রেসপন্স (200 OK): ${response.body}");
+
+        // ✅ টোকেন লোকালি সংরক্ষণ করা হবে
+        final data = jsonDecode(response.body);
+        final token = data['data']?['token'];
+
+        if (token != null) {
+          await saveTokenToLocalStorage(token);
+          print("💾 টোকেন লোকালি সেভ করা হয়েছে: $token");
+        } else {
+          print("⚠️ সার্ভার থেকে কোনো টোকেন পাওয়া যায়নি।");
+        }
+      } else {
+        print("❌ সার্ভার ত্রুটি [${response.statusCode}]: ${response.body}");
+      }
+    } catch (e) {
+      print("🚫 লোকাল স্টোরেজ সংযোগ ব্যর্থ: $e");
+    }
+  }
+
+
+  void _printDecodedIdToken(String idToken) {
+    try {
+      final parts = idToken.split('.');
+      if (parts.length != 3) {
+        print("⚠️ Invalid ID Token format!");
+        return;
+      }
+
+      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+      print("🧾 Full Google ID Token Payload from google signup:");
+      print(payload);
+
+      final Map<String, dynamic> decoded = jsonDecode(payload);
+      print("📋 নাম: ${decoded['name']}");
+      print("📧 ইমেইল: ${decoded['email']}");
+      print("🖼️ ছবি: ${decoded['picture']}");
+      print("🆔 ইউজার আইডি: ${decoded['sub']}");
+    } catch (e) {
+      print("❌ ID Token ডিকোড করতে সমস্যা: $e");
+    }
+  }
+
+
+
+
+
+
   final _usernameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
@@ -23,45 +172,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final siteProvider = Provider.of<SiteProvider>(context);
+    final site = siteProvider.siteData;
+    final logoUrl = "$backendUrl/images/${site?.logo}";
     final width = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar:
-
-      // AppBar(
-      //   backgroundColor: Colors.white,
-      //   elevation: 2,
-      //   title: Row(
-      //     children: [
-      //       Image.asset(
-      //         "logo.png",
-      //         height: 30,
-      //       ),
-      //     ],
-      //   ),
-      //   actions: [
-      //     TextButton(
-      //       onPressed: () {},
-      //       child: const Text(
-      //         "Register",
-      //         style: TextStyle(color: Colors.black87),
-      //       ),
-      //     ),
-      //     Padding(
-      //       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      //       child: ElevatedButton(
-      //         onPressed: () {
-      //           Navigator.push(context,
-      //               MaterialPageRoute(builder: (context) => const LoginScreen()));
-      //         },
-      //         child: const Text("Login"),
-      //       ),
-      //     ),
-      //   ],
-      // ),
-
-      AppBar(
+      appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
         elevation: 2,
@@ -75,9 +193,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   MaterialPageRoute(builder: (context) => HomeScreen()),
                 );
               },
-              child: Image.asset(
-                "assets/logo.png",
-                height: 30,
+              // child: Image.asset("assets/logo.png", height: 30,
+              child: Image.network(logoUrl, height: 30,
               ),
             ),
           ],
@@ -190,9 +307,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           "Sign up with Google",
                           style: TextStyle(fontSize: 15, color: Colors.black87),
                         ),
-                        onPressed: () {
-                          print("Google Sign-In Clicked");
-                        },
+                        onPressed: _handleGoogleSignUp,
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Colors.grey),
                           shape: RoundedRectangleBorder(

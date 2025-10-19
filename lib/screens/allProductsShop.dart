@@ -201,7 +201,10 @@
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
+import '../provider/base_url.dart' show backendUrl;
+import '../provider/site_provider.dart';
 import 'customdrawer.dart';
 import 'detaisPage_Under_allproducts.dart';
 import 'footer.dart';
@@ -268,6 +271,9 @@ class AllProductsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final siteProvider = Provider.of<SiteProvider>(context);
+    final site = siteProvider.siteData;
+    final logoUrl = "$backendUrl/images/${site?.logo}";
     return Scaffold(
       // appBar: AppBar(title: Text("All Products"), centerTitle: true),
 
@@ -285,9 +291,8 @@ class AllProductsPage extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => HomeScreen()),
                 );
               },
-              child: Image.asset(
-                "assets/logo.png",
-                height: 30,
+              // child: Image.asset("assets/logo.png", height: 30,
+              child: Image.network(logoUrl, height: 30,
               ),
             ),
           ],
