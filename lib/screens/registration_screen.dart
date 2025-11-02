@@ -7,9 +7,12 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../provider/base_url.dart' show backendUrl, saveTokenToLocalStorage;
 import '../provider/site_provider.dart';
+import '../provider/user_provider.dart';
+import 'custom_app_bar.dart';
 import 'footer.dart';
 import 'home_screen.dart';
 import 'login.dart';
+import 'userProfile_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -67,6 +70,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       // 🔹 যদি ID Token পাওয়া যায়, তাহলে সেটা ডিকোড করে দেখি
       if (idToken != null) {
+
         _printDecodedIdToken(idToken);
       } else {
         print("⚠️ Warning: ID Token পাওয়া যায়নি (সম্ভবত ভুল clientId ব্যবহৃত হয়েছে)।");
@@ -76,7 +80,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       });
 
       // 🔹 এখন Backend এ টোকেন পাঠানো হবে
-      await _sendTokenToBackend(idToken);
+      await _sendTokenToBackend(idToken,googleUser);
 
     } catch (error) {
       print("🔹 ব্যবহৃত Google Client ID: ${_googleSignUp.clientId}");
@@ -88,7 +92,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  Future<void> _sendTokenToBackend(String? idToken) async {
+  Future<void> _sendTokenToBackend(String? idToken, googleUser) async {
     if (idToken == null) {
       print("❌ টোকেন পাওয়া যায়নি, Backend এ পাঠানো যাবে না।");
       return;
@@ -121,6 +125,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
         if (token != null) {
           await saveTokenToLocalStorage(token);
+
+          // ✅ Provider-এ সেট করো
+
+          Provider.of<UserProvider>(context, listen: false).setUser(
+            googleUser.displayName ?? '',
+            googleUser.email,
+            googleUser.photoUrl ?? '',
+          );
+
+          // ✅ Login সফল হলে Profile Page / Home Page এ redirect করো
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) =>  UserProfilePage()),
+          );
           print("💾 টোকেন লোকালি সেভ করা হয়েছে: $token");
         } else {
           print("⚠️ সার্ভার থেকে কোনো টোকেন পাওয়া যায়নি।");
@@ -176,89 +194,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final site = siteProvider.siteData;
     final logoUrl = "$backendUrl/images/${site?.logo}";
     final width = MediaQuery.of(context).size.width;
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider;
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
-        elevation: 2,
-        title: Row(
-          children: [
-            GestureDetector(
-              onTap: () {
-                // 🏠 এখানে তোমার HomeScreen এ নিয়ে যাও
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomeScreen()),
-                );
-              },
-              // child: Image.asset("assets/logo.png", height: 30,
-              child: Image.network(logoUrl, height: 30,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          // Register Button
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => RegisterScreen()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue, // Primary background
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6),
-              ),
-              elevation: 0,
-            ),
 
-            child: Text(
-              "Register",
-              style: TextStyle(
-                color: Colors.white, // Primary color
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-
-          // Login Button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: ElevatedButton(
-              onPressed: () {
-                // Login action
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()),
-                );
-
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white, // Primary background
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                  side: BorderSide(color: Colors.lightBlueAccent, width: 2), // 🔹 ব্লু বর্ডার
-
-
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                "Login",
-                style: TextStyle(
-                  color: Colors.black,
-                  // fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-
+      appBar: CustomAppBar( logoUrl: logoUrl, isLoggedIn: user.isLoggedIn,),
 
         // ✅ পুরো স্ক্রলযোগ্য পেজ + নিচে footer থাকবে
       body: SingleChildScrollView(
@@ -321,165 +263,166 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     const SizedBox(height: 25),
 
                     // OR Divider
-                    Row(
-                      children: [
-                        Expanded(
-                            child: Divider(
-                                color: Colors.grey[300], thickness: 1.3)),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          child:
-                          Text("Or", style: TextStyle(color: Colors.black54)),
-                        ),
-                        Expanded(
-                            child: Divider(
-                                color: Colors.grey[300], thickness: 1.3)),
-                      ],
-                    ),
-
-                    const SizedBox(height: 25),
-
-                    // Username & Phone
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        if (constraints.maxWidth < 500) {
-                          return Column(
-                            children: [
-                              _buildTextField("Username", _usernameController),
-                              const SizedBox(height: 15),
-                              _buildTextField("Phone", _phoneController),
-                            ],
-                          );
-                        } else {
-                          return Row(
-                            children: [
-                              Expanded(
-                                  child: _buildTextField(
-                                      "Username", _usernameController)),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                  child: _buildTextField(
-                                      "Phone", _phoneController)),
-                            ],
-                          );
-                        }
-                      },
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    _buildTextField("Email", _emailController),
-
-                    const SizedBox(height: 15),
-
-                    // Password Fields
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        if (constraints.maxWidth < 500) {
-                          return Column(
-                            children: [
-                              _buildPasswordField(
-                                "Password",
-                                _passwordController,
-                                _showPassword,
-                                    () => setState(
-                                        () => _showPassword = !_showPassword),
-                              ),
-                              const SizedBox(height: 15),
-                              _buildPasswordField(
-                                "Confirm Password",
-                                _confirmPasswordController,
-                                _showConfirmPassword,
-                                    () => setState(() => _showConfirmPassword =
-                                !_showConfirmPassword),
-                              ),
-                            ],
-                          );
-                        } else {
-                          return Row(
-                            children: [
-                              Expanded(
-                                child: _buildPasswordField(
-                                  "Password",
-                                  _passwordController,
-                                  _showPassword,
-                                      () => setState(() =>
-                                  _showPassword = !_showPassword),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _buildPasswordField(
-                                  "Confirm Password",
-                                  _confirmPasswordController,
-                                  _showConfirmPassword,
-                                      () => setState(() => _showConfirmPassword =
-                                  !_showConfirmPassword),
-                                ),
-                              ),
-                            ],
-                          );
-                        }
-                      },
-                    ),
-
-                    const SizedBox(height: 25),
-
-                    // Create Account Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          print("Create Account clicked");
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.lightBlueAccent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          "Create Account",
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      children: [
-                        const Text("Have an account? "),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const LoginScreen()),
-                            );
-                          },
-                          child: const Text(
-                            "Login here",
-                            style: TextStyle(
-                              color: Colors.blueAccent,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    // Row(
+                    //   children: [
+                    //     Expanded(
+                    //         child: Divider(
+                    //             color: Colors.grey[300], thickness: 1.3)),
+                    //     const Padding(
+                    //       padding: EdgeInsets.symmetric(horizontal: 8),
+                    //       child:
+                    //       Text("Or", style: TextStyle(color: Colors.black54)),
+                    //     ),
+                    //     Expanded(
+                    //         child: Divider(
+                    //             color: Colors.grey[300], thickness: 1.3)),
+                    //   ],
+                    // ),
+                    //
+                    // const SizedBox(height: 25),
+                    //
+                    // // Username & Phone
+                    // LayoutBuilder(
+                    //   builder: (context, constraints) {
+                    //     if (constraints.maxWidth < 500) {
+                    //       return Column(
+                    //         children: [
+                    //           _buildTextField("Username", _usernameController),
+                    //           const SizedBox(height: 15),
+                    //           _buildTextField("Phone", _phoneController),
+                    //         ],
+                    //       );
+                    //     } else {
+                    //       return Row(
+                    //         children: [
+                    //           Expanded(
+                    //               child: _buildTextField(
+                    //                   "Username", _usernameController)),
+                    //           const SizedBox(width: 10),
+                    //           Expanded(
+                    //               child: _buildTextField(
+                    //                   "Phone", _phoneController)),
+                    //         ],
+                    //       );
+                    //     }
+                    //   },
+                    // ),
+                    //
+                    // const SizedBox(height: 15),
+                    //
+                    // _buildTextField("Email", _emailController),
+                    //
+                    // const SizedBox(height: 15),
+                    //
+                    // // Password Fields
+                    // LayoutBuilder(
+                    //   builder: (context, constraints) {
+                    //     if (constraints.maxWidth < 500) {
+                    //       return Column(
+                    //         children: [
+                    //           _buildPasswordField(
+                    //             "Password",
+                    //             _passwordController,
+                    //             _showPassword,
+                    //                 () => setState(
+                    //                     () => _showPassword = !_showPassword),
+                    //           ),
+                    //           const SizedBox(height: 15),
+                    //           _buildPasswordField(
+                    //             "Confirm Password",
+                    //             _confirmPasswordController,
+                    //             _showConfirmPassword,
+                    //                 () => setState(() => _showConfirmPassword =
+                    //             !_showConfirmPassword),
+                    //           ),
+                    //         ],
+                    //       );
+                    //     } else {
+                    //       return Row(
+                    //         children: [
+                    //           Expanded(
+                    //             child: _buildPasswordField(
+                    //               "Password",
+                    //               _passwordController,
+                    //               _showPassword,
+                    //                   () => setState(() =>
+                    //               _showPassword = !_showPassword),
+                    //             ),
+                    //           ),
+                    //           const SizedBox(width: 10),
+                    //           Expanded(
+                    //             child: _buildPasswordField(
+                    //               "Confirm Password",
+                    //               _confirmPasswordController,
+                    //               _showConfirmPassword,
+                    //                   () => setState(() => _showConfirmPassword =
+                    //               !_showConfirmPassword),
+                    //             ),
+                    //           ),
+                    //         ],
+                    //       );
+                    //     }
+                    //   },
+                    // ),
+                    //
+                    // const SizedBox(height: 25),
+                    //
+                    // // Create Account Button
+                    // SizedBox(
+                    //   width: double.infinity,
+                    //   height: 50,
+                    //   child: ElevatedButton(
+                    //     onPressed: () {
+                    //       print("Create Account clicked");
+                    //     },
+                    //     style: ElevatedButton.styleFrom(
+                    //       backgroundColor: Colors.lightBlueAccent,
+                    //       shape: RoundedRectangleBorder(
+                    //         borderRadius: BorderRadius.circular(10),
+                    //       ),
+                    //     ),
+                    //     child: const Text(
+                    //       "Create Account",
+                    //       style: TextStyle(fontSize: 16, color: Colors.white),
+                    //     ),
+                    //   ),
+                    // ),
+                    //
+                    // const SizedBox(height: 20),
+                    //
+                    // Wrap(
+                    //   alignment: WrapAlignment.center,
+                    //   children: [
+                    //     const Text("Have an account? "),
+                    //     GestureDetector(
+                    //       onTap: () {
+                    //         Navigator.push(
+                    //           context,
+                    //           MaterialPageRoute(
+                    //               builder: (context) => const LoginScreen()),
+                    //         );
+                    //       },
+                    //       child: const Text(
+                    //         "Login here",
+                    //         style: TextStyle(
+                    //           color: Colors.blueAccent,
+                    //           fontWeight: FontWeight.w500,
+                    //         ),
+                    //       ),
+                    //     ),
+                    //   ],
+                    // ),
                   ],
                 ),
               ),
             ),
 
             // ✅ এখন Footer scroll এর অংশ, fixed না
-             CustomFooter(),
+            //  CustomFooter(),
           ],
         ),
       ),
+      bottomNavigationBar: CustomFooter()
     );
   }
 

@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 
 import '../provider/base_url.dart';
 import '../provider/site_provider.dart' show SiteProvider;
+import '../provider/user_provider.dart';
 import 'addMoneyPage.dart';
+import 'custom_app_bar.dart';
 import 'customdrawer.dart';
 import 'footer.dart';
 import 'home_screen.dart';
@@ -18,64 +20,12 @@ class ProductDetailsPage_under_allproducts extends StatelessWidget {
     final siteProvider = Provider.of<SiteProvider>(context);
     final site = siteProvider.siteData;
     final logoUrl = "$backendUrl/images/${site?.logo}";
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider;
     return Scaffold(
       // appBar: AppBar(title: Text("Product Details")),
       drawer: CustomDrawer(),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        // 🔥 ডিফল্ট Hamburger আইকন লুকিয়ে দিলাম
-        title: Row(
-          children: [
-            GestureDetector(
-              onTap: () {
-                // 🏠 এখানে তোমার HomeScreen এ নিয়ে যাও
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomeScreen()),
-                );
-              },
-              // child: Image.asset("assets/logo.png", height: 30,
-              child: Image.network(logoUrl, height: 30,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Builder(
-            builder: (context) {
-              return InkWell(
-                onTap: () {
-                  Scaffold.of(context).openDrawer(); // ✅ Drawer open হবে
-                },
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    if (constraints.maxWidth < 400) {
-                      // Mobile এ শুধু Image
-                      return const Padding(
-                        padding: EdgeInsets.only(right: 10),
-                        child: CircleAvatar(
-                          backgroundImage: AssetImage("assets/user.png"),
-                        ),
-                      );
-                    } else {
-                      // Tablet/Desktop এ Full Profile
-                      return Row(
-                        children: const [
-                          CircleAvatar(backgroundImage: AssetImage("assets/user.png")),
-                          SizedBox(width: 6),
-                          Text("Hellowfarjan"),
-                          Icon(Icons.arrow_drop_down),
-                          SizedBox(width: 10),
-                        ],
-                      );
-                    }
-                  },
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+      appBar: CustomAppBar( logoUrl: logoUrl, isLoggedIn: user.isLoggedIn,),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(12.0),

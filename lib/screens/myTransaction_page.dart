@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/transaction_model.dart';
+import '../provider/user_provider.dart';
 import '../provider/user_transaction_provider.dart';
 import '../provider/base_url.dart';
 import '../provider/site_provider.dart';
+import 'custom_app_bar.dart';
 import 'customdrawer.dart';
 import 'footer.dart';
 import 'home_screen.dart';
@@ -30,59 +32,66 @@ class _MyTransactionsPageState extends State<MyTransactionsPage> {
     final site = siteProvider.siteData;
     final logoUrl = "$backendUrl/images/${site?.logo}";
     final txProvider = Provider.of<UserTransactionProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider;
 
     return Scaffold(
-      drawer: const CustomDrawer(),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            GestureDetector(
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) =>  HomeScreen()),
-                );
-              },
-              child: Image.network(logoUrl, height: 30),
-            ),
-          ],
-        ),
-        actions: [
-          Builder(
-            builder: (context) {
-              return InkWell(
-                onTap: () {
-                  Scaffold.of(context).openDrawer();
-                },
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    if (constraints.maxWidth < 400) {
-                      return const Padding(
-                        padding: EdgeInsets.only(right: 10),
-                        child: CircleAvatar(
-                          backgroundImage: AssetImage("assets/user.png"),
-                        ),
-                      );
-                    } else {
-                      return Row(
-                        children: const [
-                          CircleAvatar(
-                              backgroundImage: AssetImage("assets/user.png")),
-                          SizedBox(width: 6),
-                          Text("Hello Farjan"),
-                          Icon(Icons.arrow_drop_down),
-                          SizedBox(width: 10),
-                        ],
-                      );
-                    }
-                  },
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+      drawer:  CustomDrawer(),
+      // appBar: AppBar(
+      //   automaticallyImplyLeading: false,
+      //   title: Row(
+      //     children: [
+      //       GestureDetector(
+      //         onTap: () {
+      //           Navigator.pushReplacement(
+      //             context,
+      //             MaterialPageRoute(builder: (context) =>  HomeScreen()),
+      //           );
+      //         },
+      //         child: Image.network(logoUrl, height: 30),
+      //       ),
+      //     ],
+      //   ),
+      //   actions: [
+      //     Builder(
+      //       builder: (context) {
+      //         return InkWell(
+      //           onTap: () {
+      //             Scaffold.of(context).openDrawer();
+      //           },
+      //           child: LayoutBuilder(
+      //             builder: (context, constraints) {
+      //               if (constraints.maxWidth < 400) {
+      //                 return const Padding(
+      //                   padding: EdgeInsets.only(right: 10),
+      //                   child: CircleAvatar(
+      //                     backgroundImage: AssetImage("assets/user.png"),
+      //                   ),
+      //                 );
+      //               } else {
+      //                 return Row(
+      //                   children: const [
+      //                     CircleAvatar(
+      //                         backgroundImage: AssetImage("assets/user.png")),
+      //                     SizedBox(width: 6),
+      //                     Text("Hello Farjan"),
+      //                     Icon(Icons.arrow_drop_down),
+      //                     SizedBox(width: 10),
+      //                   ],
+      //                 );
+      //               }
+      //             },
+      //           ),
+      //         );
+      //       },
+      //     ),
+      //   ],
+      // ),
+
+
+      appBar: CustomAppBar( logoUrl: logoUrl, isLoggedIn: user.isLoggedIn,),
+
+
 
       // 🔥 Stack ব্যবহার করা হয়েছে Footer নিচে রাখার জন্য
       body: Stack(

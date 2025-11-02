@@ -1,181 +1,109 @@
-// /////////////////////////////////////////////////
-//
-// import 'package:flutter/material.dart';
-//
-// class OrderSuggestionPage extends StatefulWidget {
-//   final String image, title, subtitle, price, description;
-//
-//   OrderSuggestionPage({
-//     required this.image,
-//     required this.title,
-//     required this.subtitle,
-//     required this.price,
-//     required this.description,
-//   });
-//
-//   @override
-//   _OrderSuggestionPageState createState() => _OrderSuggestionPageState();
-// }
-//
-// class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
-//   final TextEditingController playerIdController = TextEditingController();
-//   int? selectedIndex;
-//
-//   final List<Map<String, dynamic>> rechargePacks = [
-//     {"title": "🕒 Weekly Lite", "price": 42},
-//     {"title": "📘 Weekly Pass", "price": 150},
-//     {"title": "📙 Monthly Pass", "price": 770},
-//     {"title": "💎 50 Diamonds", "price": 40},
-//     {"title": "💎 115 Diamonds", "price": 78},
-//     {"title": "💎 240 Diamonds", "price": 155},
-//   ];
-//
-//   void _buyNow() {
-//     if (playerIdController.text.isEmpty) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text("⚠️ Please enter Player ID first")),
-//       );
-//       return;
-//     }
-//
-//     if (selectedIndex == null) {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text("⚠️ Please select a Recharge Pack")),
-//       );
-//       return;
-//     }
-//
-//     final pack = rechargePacks[selectedIndex!];
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(content: Text("✅ Buying ${pack['title']} for ৳${pack['price']}")),
-//     );
-//
-//     // 🔥 এখানেই পরে API Call যাবে
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text(widget.title)),
-//       body: SingleChildScrollView(
-//         padding: EdgeInsets.all(16),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             // Product Image
-//             ClipRRect(
-//               borderRadius: BorderRadius.circular(12),
-//               child: Image.asset(widget.image, fit: BoxFit.cover),
-//             ),
-//             SizedBox(height: 10),
-//
-//             Text(widget.title,
-//                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-//             SizedBox(height: 5),
-//             Text(widget.subtitle,
-//                 style: TextStyle(fontSize: 16, color: Colors.grey)),
-//             SizedBox(height: 10),
-//             Text(widget.description, style: TextStyle(fontSize: 14)),
-//
-//             SizedBox(height: 20),
-//
-//             // Player ID
-//             TextField(
-//               controller: playerIdController,
-//               decoration: InputDecoration(
-//                 labelText: "Enter Player ID",
-//                 border: OutlineInputBorder(),
-//               ),
-//             ),
-//             SizedBox(height: 20),
-//
-//             Text("Select Recharge Pack",
-//                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-//             SizedBox(height: 10),
-//
-//             GridView.builder(
-//               shrinkWrap: true,
-//               physics: NeverScrollableScrollPhysics(),
-//               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-//                 crossAxisCount: 2,
-//                 childAspectRatio: 1.5,
-//                 crossAxisSpacing: 10,
-//                 mainAxisSpacing: 10,
-//               ),
-//               itemCount: rechargePacks.length,
-//               itemBuilder: (context, index) {
-//                 final pack = rechargePacks[index];
-//                 final isSelected = selectedIndex == index;
-//
-//                 return GestureDetector(
-//                   onTap: () {
-//                     setState(() => selectedIndex = index);
-//                   },
-//                   child: Container(
-//                     decoration: BoxDecoration(
-//                       border: Border.all(
-//                           color: isSelected ? Colors.blue : Colors.grey),
-//                       borderRadius: BorderRadius.circular(12),
-//                       gradient: isSelected
-//                           ? LinearGradient(
-//                           colors: [Colors.blue, Colors.blueAccent])
-//                           : null,
-//                     ),
-//                     child: Column(
-//                       mainAxisAlignment: MainAxisAlignment.center,
-//                       children: [
-//                         Text(pack["title"],
-//                             textAlign: TextAlign.center,
-//                             style: TextStyle(
-//                               fontWeight: FontWeight.bold,
-//                               color: isSelected ? Colors.white : Colors.black,
-//                             )),
-//                         SizedBox(height: 6),
-//                         Text("৳ ${pack["price"]}",
-//                             style: TextStyle(
-//                               fontSize: 16,
-//                               fontWeight: FontWeight.w600,
-//                               color: isSelected ? Colors.white : Colors.black54,
-//                             )),
-//                       ],
-//                     ),
-//                   ),
-//                 );
-//               },
-//             ),
-//
-//             SizedBox(height: 20),
-//
-//             // Buy Now + Add Money
-//             Row(
-//               children: [
-//                 Expanded(
-//                   child: ElevatedButton(
-//                     onPressed: _buyNow,
-//                     child: Text("Buy Now"),
-//                   ),
-//                 ),
-//                 SizedBox(width: 10),
-//                 Expanded(
-//                   child: ElevatedButton(
-//                     style:
-//                     ElevatedButton.styleFrom(backgroundColor: Colors.green),
-//                     onPressed: () {
-//                       // 🔥 Add Money flow
-//                       ScaffoldMessenger.of(context).showSnackBar(
-//                         SnackBar(content: Text("💰 Add Money clicked")),
-//                       );
-//                     },
-//                     child: Text("Add Money"),
-//                   ),
-//                 ),
-//               ],
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-//
-// //////////////////////////////////////////////////////////
+import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
+class GoogleSmartSignInButton extends StatefulWidget {
+  const GoogleSmartSignInButton({super.key});
+
+  @override
+  State<GoogleSmartSignInButton> createState() =>
+      _GoogleSmartSignInButtonState();
+}
+
+class _GoogleSmartSignInButtonState extends State<GoogleSmartSignInButton> {
+  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
+  GoogleSignInAccount? _account;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoggedInAccount();
+  }
+
+  Future<void> _checkLoggedInAccount() async {
+    final account = await _googleSignIn.signInSilently();
+    setState(() => _account = account);
+  }
+
+  Future<void> _handleSignIn() async {
+    final account = await _googleSignIn.signIn();
+    if (account != null) {
+      debugPrint("✅ Signed in: ${account.displayName}");
+      setState(() => _account = account);
+      // এখানে তোমার backend API তে পাঠাতে পারো
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final user = _account;
+
+    return InkWell(
+      onTap: _handleSignIn,
+      borderRadius: BorderRadius.circular(40),
+      child: Container(
+        height: 50,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF4285F4), // Google blue
+          borderRadius: BorderRadius.circular(40),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (user != null)
+              CircleAvatar(
+                radius: 16,
+                backgroundImage: NetworkImage(user.photoUrl ?? ""),
+              )
+            else
+              const CircleAvatar(
+                radius: 16,
+                backgroundImage: NetworkImage(
+                    "https://img.icons8.com/color/48/000000/google-logo.png"),
+                backgroundColor: Colors.white,
+              ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    user != null
+                        ? "Sign in as ${user.displayName}"
+                        : "Sign in with Google",
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (user != null)
+                    Text(
+                      user.email,
+                      style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          overflow: TextOverflow.ellipsis),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.all(5),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: Image.network(
+                "https://img.icons8.com/color/48/000000/google-logo.png",
+                height: 20,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

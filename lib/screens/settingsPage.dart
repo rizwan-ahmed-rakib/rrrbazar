@@ -8,6 +8,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../provider/base_url.dart';
 import '../provider/site_provider.dart';
 import '../provider/user_profile_provider.dart' show UserProfileProvider;
+import '../provider/user_provider.dart';
+import 'custom_app_bar.dart';
 import 'customdrawer.dart';
 import 'footer.dart';
 import 'home_screen.dart';
@@ -27,77 +29,86 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final siteProvider = Provider.of<SiteProvider>(context);
-    final userProvider = Provider.of<UserProfileProvider>(context);
+    final userProfileProvider = Provider.of<UserProfileProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider;
 
     final site = siteProvider.siteData;
     final logoUrl = "$backendUrl/images/${site?.logo}";
 
-    if (userProvider.isLoading) {
+
+    if (userProfileProvider.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (userProvider.hasError || userProvider.profileData == null) {
+    if (userProfileProvider.hasError || userProfileProvider.profileData == null) {
       return const Center(child: Text("⚠️ প্রোফাইল লোড করা যায়নি"));
     }
 
-    final user = userProvider.profileData!.data;
+    final userprofiledata = userProfileProvider.profileData!.data;
     return Scaffold(
       drawer: CustomDrawer(),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        // 🔥 ডিফল্ট Hamburger আইকন লুকিয়ে দিলাম
-        title: Row(
-          children: [
-            GestureDetector(
-              onTap: () {
-                // 🏠 এখানে তোমার HomeScreen এ নিয়ে যাও
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomeScreen()),
-                );
-              },
-              // child: Image.asset("assets/logo.png", height: 30,
-              child: Image.network(logoUrl, height: 30,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Builder(
-            builder: (context) {
-              return InkWell(
-                onTap: () {
-                  Scaffold.of(context).openDrawer(); // ✅ Drawer open হবে
-                },
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    if (constraints.maxWidth < 400) {
-                      // Mobile এ শুধু Image
-                      return const Padding(
-                        padding: EdgeInsets.only(right: 10),
-                        child: CircleAvatar(
-                          backgroundImage: AssetImage("assets/user.png"),
-                        ),
-                      );
-                    } else {
-                      // Tablet/Desktop এ Full Profile
-                      return Row(
-                        children: const [
-                          CircleAvatar(backgroundImage: AssetImage("assets/user.png")),
-                          SizedBox(width: 6),
-                          Text("Hellowfarjan"),
-                          Icon(Icons.arrow_drop_down),
-                          SizedBox(width: 10),
-                        ],
-                      );
-                    }
-                  },
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+      // appBar: AppBar(
+      //   automaticallyImplyLeading: false,
+      //   // 🔥 ডিফল্ট Hamburger আইকন লুকিয়ে দিলাম
+      //   title: Row(
+      //     children: [
+      //       GestureDetector(
+      //         onTap: () {
+      //           // 🏠 এখানে তোমার HomeScreen এ নিয়ে যাও
+      //           Navigator.pushReplacement(
+      //             context,
+      //             MaterialPageRoute(builder: (context) => HomeScreen()),
+      //           );
+      //         },
+      //         // child: Image.asset("assets/logo.png", height: 30,
+      //         child: Image.network(logoUrl, height: 30,
+      //         ),
+      //       ),
+      //     ],
+      //   ),
+      //   actions: [
+      //     Builder(
+      //       builder: (context) {
+      //         return InkWell(
+      //           onTap: () {
+      //             Scaffold.of(context).openDrawer(); // ✅ Drawer open হবে
+      //           },
+      //           child: LayoutBuilder(
+      //             builder: (context, constraints) {
+      //               if (constraints.maxWidth < 400) {
+      //                 // Mobile এ শুধু Image
+      //                 return const Padding(
+      //                   padding: EdgeInsets.only(right: 10),
+      //                   child: CircleAvatar(
+      //                     backgroundImage: AssetImage("assets/user.png"),
+      //                   ),
+      //                 );
+      //               } else {
+      //                 // Tablet/Desktop এ Full Profile
+      //                 return Row(
+      //                   children: const [
+      //                     CircleAvatar(backgroundImage: AssetImage("assets/user.png")),
+      //                     SizedBox(width: 6),
+      //                     Text("Hellowfarjan"),
+      //                     Icon(Icons.arrow_drop_down),
+      //                     SizedBox(width: 10),
+      //                   ],
+      //                 );
+      //               }
+      //             },
+      //           ),
+      //         );
+      //       },
+      //     ),
+      //   ],
+      // ),
+
+
+      appBar: CustomAppBar( logoUrl: logoUrl, isLoggedIn: user.isLoggedIn,),
+
+
+
       backgroundColor: const Color(0xfff9fafb),
 
 
@@ -125,7 +136,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       border: Border.all(color: Colors.white, width: 4),
                       image:  DecorationImage(
                         // image: AssetImage("assets/user.png"),
-                        image: NetworkImage(user?.avatar ?? ''),
+                        image: NetworkImage(userprofiledata?.avatar ?? ''),
                         // NetworkImage(
                         //     'https://lh3.googleusercontent.com/a/ACg8ocIYFrq63uiy7rJWZPC9CSYHAKyBMIcwy-Ccdg6Fpjl3O_zKDpE=s96-c'),
                         fit: BoxFit.cover,
@@ -133,15 +144,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Text(user?.username ?? 'Unknown',
+                  Text(userprofiledata?.username ?? 'Unknown',
                       style: const TextStyle(
                           fontSize: 22, fontWeight: FontWeight.bold)),
 
                   const SizedBox(height: 20),
 
                   // 🔹 Info Cards
-                  _infoCard("User ID:", user!.id.toString()),
-                  _infoCard("Email:", user.email ?? ''),
+                  _infoCard("User ID:", userprofiledata!.id.toString()),
+                  _infoCard("Email:", userprofiledata.email ?? ''),
                   _phoneSection(context),
                   _changePasswordSection(),
                 ],

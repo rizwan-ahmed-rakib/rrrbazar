@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/topup_banner_model.dart'; // তোমার model path অনুযায়ী adjust করো
-import 'base_url.dart' show backendUrl;
+import 'base_url.dart';
 
 
 
@@ -11,26 +11,36 @@ import 'base_url.dart' show backendUrl;
 class TopupBannerProvider with ChangeNotifier {
   List<Data> _banners = [];
   bool _isLoading = false;
+  bool hasFetched = false; // ✅ নতুন flag
 
   List<Data> get banners => _banners;
   bool get isLoading => _isLoading;
 
   Future<void> fetchBanners() async {
-    _isLoading = true;
-    notifyListeners();
+
+    if (hasFetched) return; // ✅ একবার ফেচ হলে আর করবে না
+
+
+
 
     try {
+
+      _isLoading = true;
+      notifyListeners();
+
       print("🔵 Fetching banners from: $backendUrl/api/v1/banner");
 
       // final response = await http.get(Uri.parse("$backendUrl/api/v1/banner"));
 
       final response = await http.get(
         Uri.parse("$backendUrl/api/v1/banner"),
-        // headers: {
-        //   "Accept": "application/json",
-        //   // নিচেরটা ঐচ্ছিক, যদি backend Origin চায়
-        //   "Origin": "com.example.rrrbazar.com", // বা তোমার প্যাকেজ নাম
-        // },
+        headers: {
+          "Accept": "application/json",
+          // "Origin": "com.example.rrrbazar.com", // বা তোমার প্যাকেজ নাম
+          // "Origin": backendUrl, // বা তোমার প্যাকেজ নাম
+          // "Origin": "https://cobratopups.com", // বা তোমার প্যাকেজ নাম
+          // নিচেরটা ঐচ্ছিক, যদি backend Origin চায়
+        },
       );
 
 
@@ -41,6 +51,9 @@ class TopupBannerProvider with ChangeNotifier {
         final data = json.decode(response.body);
         final topupBanner = topup_banner_model.fromJson(data);
         _banners = topupBanner.data ?? [];
+
+        hasFetched = true; // ✅ একবার লোড হয়ে গেলে true করে দিচ্ছি
+
 
         print("🔵 Loaded banners ${_banners.length} banners");
       } else {

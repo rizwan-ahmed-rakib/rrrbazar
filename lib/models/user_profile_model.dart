@@ -82,6 +82,7 @@ class Data {
     updatedAt = json['updated_at'];
   }
 
+
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['created_at'] = this.createdAt;

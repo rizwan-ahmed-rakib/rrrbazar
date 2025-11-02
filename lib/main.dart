@@ -111,6 +111,7 @@ import 'provider/site_provider.dart' show SiteProvider;
 import 'provider/topup_banner_provider.dart' show TopupBannerProvider;
 import 'provider/topup_products_provider.dart' show Topup_Products_Provider;
 import 'provider/user_profile_provider.dart' show UserProfileProvider;
+import 'provider/user_provider.dart' show UserProvider;
 import 'provider/user_transaction_provider.dart' show UserTransactionProvider;
 import 'screens/addMoneyPage.dart' show AddMoneyPage;
 import 'screens/allProductsShop.dart' show AllProductsPage;
@@ -128,10 +129,11 @@ import 'screens/settingsPage.dart' show SettingsScreen;
 import 'screens/shipment.dart' show ShipmentPage;
 import 'screens/splash_screen.dart';
 import 'screens/terms&condition.dart' show TermsPage;
+import 'screens/topup_page.dart' show TopupScreen;
 import 'screens/userProfile_screen.dart' show UserProfilePage;
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();   // 🔹 এটা অত্যাবশ্যক  for shared_preferaences
 
   // await Firebase.initializeApp(
   //   options: DefaultFirebaseOptions.currentPlatform,
@@ -148,6 +150,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => UserProfileProvider()),
         ChangeNotifierProvider(create: (_) => UserTransactionProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
 
       ],
       child: MyApp(),
@@ -173,6 +176,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => HomeScreen(),
+        '/topup': (context) => TopupScreen(),
         '/footer': (context) => CustomFooter(),
         '/terms&condition': (context) => TermsPage(),
         '/privacypolicy': (context) => PrivacyPage(),
@@ -201,7 +205,6 @@ class MyApp extends StatelessWidget {
               image: args['image'] as String,
               title: args['title'] as String,
               subtitle: args['subtitle'] as String,
-              price: args['price'] as String,
               description: args['description'] as String,
             ),
           );

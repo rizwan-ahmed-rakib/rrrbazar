@@ -4,6 +4,8 @@ import '../models/order_model.dart';
 import '../provider/base_url.dart' show backendUrl;
 import '../provider/site_provider.dart';
 import '../provider/order_provider.dart';
+import '../provider/user_provider.dart';
+import 'custom_app_bar.dart';
 import 'customdrawer.dart';
 import 'footer.dart';
 import 'home_screen.dart';
@@ -32,38 +34,48 @@ class _MyOrdersPageState extends State<MyOrdersPage> {
     final site = siteProvider.siteData;
     final logoUrl = "$backendUrl/images/${site?.logo}";
     final orderProvider = Provider.of<OrderProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    final user = userProvider;
 
     return Scaffold(
-      drawer: const CustomDrawer(),
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Row(
-          children: [
-            GestureDetector(
-              onTap: () => Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) =>  HomeScreen()),
-              ),
-              child: Image.network(logoUrl, height: 30),
-            ),
-          ],
-        ),
-        actions: [
-          Builder(
-            builder: (context) {
-              return InkWell(
-                onTap: () => Scaffold.of(context).openDrawer(),
-                child: const Padding(
-                  padding: EdgeInsets.only(right: 10),
-                  child: CircleAvatar(
-                    backgroundImage: AssetImage("assets/user.png"),
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
+      drawer:  CustomDrawer(),
+      // appBar: AppBar(
+      //   automaticallyImplyLeading: false,
+      //   title: Row(
+      //     children: [
+      //       GestureDetector(
+      //         onTap: () => Navigator.pushReplacement(
+      //           context,
+      //           MaterialPageRoute(builder: (context) =>  HomeScreen()),
+      //         ),
+      //         child: Image.network(logoUrl, height: 30),
+      //       ),
+      //     ],
+      //   ),
+      //   actions: [
+      //     Builder(
+      //       builder: (context) {
+      //         return InkWell(
+      //           onTap: () => Scaffold.of(context).openDrawer(),
+      //           child: const Padding(
+      //             padding: EdgeInsets.only(right: 10),
+      //             child: CircleAvatar(
+      //               backgroundImage: AssetImage("assets/user.png"),
+      //             ),
+      //           ),
+      //         );
+      //       },
+      //     ),
+      //   ],
+      // ),
+
+
+
+      appBar: CustomAppBar( logoUrl: logoUrl, isLoggedIn: user.isLoggedIn,),
+
+
+
+
 
       body: Builder(
         builder: (context) {

@@ -38,7 +38,7 @@ class Data {
   int? id;
   String? name;
   String? logo;
-  Null? helperImage;
+  String? helperImage;
   String? rules;
   String? topupType;
   int? isActive;
