@@ -26,7 +26,10 @@ class SiteProvider extends ChangeNotifier {
           "Accept": "application/json",
           // "Origin": "com.example.rrrbazar.com",
           // "Origin": "https://rrrbazar.com",
-          "Origin": "https://cobratopups.com",
+          // "Origin": "https://cobratopups.com",
+          "Origin": "https://zsshopbd.com",
+          // "Origin": "https://bdgamebazar.com", // বা তোমার প্যাকেজ নাম
+
           // "Origin": backendUrl,
           // "Origin": "http://localhost:3000", // বা তোমার প্যাকেজ নাম
 
@@ -40,7 +43,7 @@ class SiteProvider extends ChangeNotifier {
         print(jsonEncode(jsonResponse["data"]));
       } else {
         hasError = true;
-        print("❌ সার্ভার ত্রুটি: ${response.statusCode}");
+        print("❌ site data সার্ভার ত্রুটি: ${response.statusCode}");
       }
     } catch (e) {
       hasError = true;

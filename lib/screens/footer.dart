@@ -280,6 +280,7 @@ class _CustomFooterState extends State<CustomFooter> {
 
     if (siteProvider.hasError || site == null) {
       return const Center(child: Text("⚠️ Footer data load error!"));
+
     }
 
     // 🔹 Dynamic background color

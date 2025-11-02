@@ -258,6 +258,11 @@ class _LoginScreenState extends State<LoginScreen> {
             _buildLoginCard(),
             const SizedBox(height: 60),
             // CustomFooter(),
+
+            // const SizedBox(height: 100),
+            // const CustomFooter(), // scrollable footer
+
+
           ],
         )
 
@@ -339,11 +344,16 @@ class _LoginScreenState extends State<LoginScreen> {
             // 🔹 নিচে footer বা অন্যান্য widget রাখতে পারো
             // const Spacer(),
             // CustomFooter(),
+
+            // const SizedBox(height: 100),
+            // const CustomFooter(), // scrollable footer
           ],
         )
       ),
 
       // 🟢 Footer নিচে ফিক্সড থাকবে
+
+
 
       bottomNavigationBar: CustomFooter(),
 

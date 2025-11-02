@@ -39,6 +39,8 @@ class TopupBannerProvider with ChangeNotifier {
           // "Origin": "com.example.rrrbazar.com", // বা তোমার প্যাকেজ নাম
           // "Origin": backendUrl, // বা তোমার প্যাকেজ নাম
           // "Origin": "https://cobratopups.com", // বা তোমার প্যাকেজ নাম
+          "Origin": "https://zsshopbd.com", // বা তোমার প্যাকেজ নাম
+          // "Origin": "https://bdgamebazar.com", // বা তোমার প্যাকেজ নাম
           // নিচেরটা ঐচ্ছিক, যদি backend Origin চায়
         },
       );
