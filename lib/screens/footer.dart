@@ -1,230 +1,5 @@
-// import 'package:flutter/material.dart';
-// import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-// import 'package:url_launcher/url_launcher.dart';
-//
-// class CustomFooter extends StatelessWidget {
-//   final String phoneNumber = "+8801929248067";
-//
-//   /// ☎️ Call Function
-//   Future<void> _launchPhone(BuildContext context, String number) async {
-//     final Uri url = Uri(scheme: "tel", path: number);
-//
-//     if (await canLaunchUrl(url)) {
-//       await launchUrl(
-//         url,
-//         mode: LaunchMode.externalApplication, // ✅ important for Android
-//       );
-//     } else {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(content: Text("Unable to open dialer.")),
-//       );
-//     }
-//   }
-//
-//   /// 💬 WhatsApp Function
-//   Future<void> _launchWhatsApp(BuildContext context, String number) async {
-//     final Uri url = Uri.parse("https://wa.me/$number");
-//
-//     if (await canLaunchUrl(url)) {
-//       await launchUrl(
-//         url,
-//         mode: LaunchMode.externalApplication, // ✅ must for Android
-//       );
-//     } else {
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         const SnackBar(content: Text("WhatsApp not available on this device.")),
-//       );
-//     }
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       color: Colors.lightBlueAccent.shade200,
-//       child: Column(
-//         mainAxisSize: MainAxisSize.min,
-//         children: [
-//           Padding(
-//             padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-//             child: LayoutBuilder(
-//               builder: (context, constraints) {
-//                 if (constraints.maxWidth < 600) {
-//                   return Column(
-//                     children: [
-//                       _buildSupportSection(context),
-//                     ],
-//                   );
-//                 } else {
-//                   return Row(
-//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       _buildSupportSection(context),
-//                       _buildAboutSection(context),
-//                       _buildStayConnectedSection(),
-//                     ],
-//                   );
-//                 }
-//               },
-//             ),
-//           ),
-//
-//           const Divider(color: Colors.white30, thickness: 0.5),
-//
-//           const Padding(
-//             padding: EdgeInsets.all(8.0),
-//             child: Text(
-//               "© Copyright 2025. All Rights Reserved. Developed by RRRBazar",
-//               textAlign: TextAlign.center,
-//               style: TextStyle(color: Colors.white70, fontSize: 12),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   // ✅ Support Section
-//   Widget _buildSupportSection(BuildContext context) {
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.center,
-//       children: [
-//         const Text(
-//           "SUPPORT",
-//           style: TextStyle(
-//             color: Colors.white,
-//             fontWeight: FontWeight.bold,
-//             letterSpacing: 2,
-//             fontSize: 20,
-//           ),
-//         ),
-//         const SizedBox(height: 12),
-//
-//         // Phone Support
-//         InkWell(
-//           onTap: () => _launchPhone(context, phoneNumber),
-//           child: _supportCard(
-//             icon: Icons.phone,
-//             title: "10AM - 10PM",
-//             number: phoneNumber,
-//           ),
-//         ),
-//         const SizedBox(height: 12),
-//
-//         // WhatsApp Support
-//         InkWell(
-//           // onTap: () => _launchWhatsApp(context, phoneNumber.replaceAll("+", "")),
-//           onTap: () => _launchWhatsApp(context, phoneNumber),
-//           child: _supportCard(
-//             icon: FontAwesomeIcons.whatsapp,
-//             title: "10AM - 10PM",
-//             number: phoneNumber,
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-//
-//   Widget _supportCard({
-//     required IconData icon,
-//     required String title,
-//     required String number,
-//   }) {
-//     return Container(
-//       padding: const EdgeInsets.all(14),
-//       decoration: BoxDecoration(
-//         color: Colors.white.withOpacity(0.1),
-//         borderRadius: BorderRadius.circular(30),
-//         border: Border.all(color: Colors.white.withOpacity(0.3)),
-//       ),
-//       child: Row(
-//         children: [
-//           CircleAvatar(
-//             backgroundColor: Colors.white.withOpacity(0.2),
-//             child: Icon(icon, color: Colors.white, size: 18),
-//           ),
-//           const SizedBox(width: 10),
-//           Column(
-//             crossAxisAlignment: CrossAxisAlignment.start,
-//             children: [
-//               Text(
-//                 title,
-//                 style: const TextStyle(
-//                   color: Colors.white70,
-//                   fontSize: 12,
-//                   fontWeight: FontWeight.bold,
-//                 ),
-//               ),
-//               Text(
-//                 number,
-//                 style: const TextStyle(
-//                   color: Colors.white,
-//                   fontWeight: FontWeight.w600,
-//                   fontSize: 14,
-//                 ),
-//               ),
-//             ],
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-//
-//   Widget _buildAboutSection(BuildContext context) {
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: [
-//         const Text(
-//           "ABOUT",
-//           style: TextStyle(
-//             color: Colors.white,
-//             fontWeight: FontWeight.bold,
-//             letterSpacing: 2,
-//           ),
-//         ),
-//         const SizedBox(height: 12),
-//         _buildFooterLink("Terms & Conditions", context, "/terms&condition"),
-//         _buildFooterLink("Privacy Policy", context, "/privacypolicy"),
-//         _buildFooterLink("Shipment Info", context, "/shipmentPage"),
-//         _buildFooterLink("Refund Policy", context, "/refundpolicyPage"),
-//       ],
-//     );
-//   }
-//
-//   Widget _buildStayConnectedSection() {
-//     return Column(
-//       crossAxisAlignment: CrossAxisAlignment.start,
-//       children: const [
-//         Text(
-//           "STAY CONNECTED",
-//           style: TextStyle(
-//             color: Colors.white,
-//             fontWeight: FontWeight.bold,
-//             letterSpacing: 2,
-//           ),
-//         ),
-//         SizedBox(height: 12),
-//         Text("RRRBazar", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
-//         Text("Dhaka, Bangladesh", style: TextStyle(color: Colors.white70, fontSize: 12)),
-//         SizedBox(height: 4),
-//         Text("rrrbazarofficial@gmail.com", style: TextStyle(color: Colors.white, fontSize: 12)),
-//       ],
-//     );
-//   }
-//
-//   Widget _buildFooterLink(String text, BuildContext context, String route) {
-//     return Padding(
-//       padding: const EdgeInsets.only(bottom: 4),
-//       child: GestureDetector(
-//         onTap: () => Navigator.pushNamed(context, route),
-//         child: Text(text, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-//       ),
-//     );
-//   }
-// }
-
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -240,36 +15,201 @@ class CustomFooter extends StatefulWidget {
 }
 
 class _CustomFooterState extends State<CustomFooter> {
+
+
+
+
+
+  // Future<void> _launchPhone(BuildContext context, String number) async {
+  //   print("📞 Original Number: $number");
+  //
+  //   if (number.isEmpty) {
+  //     print("⚠️ Number is empty");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text("Phone number not available.")),
+  //     );
+  //     return;
+  //   }
+  //
+  //   // ✅ প্লাস, স্পেস বা অন্য character remove করে clean number
+  //   String cleanNumber = number.replaceAll(RegExp(r'[^0-9+]'), '');
+  //   print("📞 Clean Number: $cleanNumber");
+  //
+  //   final Uri url = Uri(scheme: "tel", path: cleanNumber);
+  //   print("📞 Launching URL: $url");
+  //
+  //   try {
+  //     if (await canLaunchUrl(url)) {
+  //       print("✅ Device supports dialer. Launching...");
+  //       await launchUrl(url, mode: LaunchMode.externalApplication);
+  //     } else {
+  //       print("❌ Device does NOT support dialer or cannot handle URL.");
+  //
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(
+  //           content: Text("Cannot open dialer. Please call: $cleanNumber"),
+  //         ),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     print("⚠️ Exception while launching dialer: $e");
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Error launching dialer: $e")),
+  //     );
+  //   }
+  // }
+
+
+
+
   Future<void> _launchPhone(BuildContext context, String number) async {
-    final Uri url = Uri(scheme: "tel", path: number);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
+    print("📞 Original Number: $number");
+
+    if (number.isEmpty) {
+      print("⚠️ Number is empty");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Unable to open dialer.")),
+        const SnackBar(content: Text("Phone number not available.")),
       );
+      return;
+    }
+
+    String cleanNumber = number.replaceAll(RegExp(r'[^0-9+]'), '');
+    print("📞 Clean Number: $cleanNumber");
+
+    final Uri url = Uri(scheme: "tel", path: cleanNumber);
+    print("📞 Launching URL: $url");
+
+    try {
+      if (await canLaunchUrl(url)) {
+        print("✅ Device supports dialer. Launching...");
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        print("❌ Dialer not supported on this device");
+        _showDialerFallback(context, cleanNumber);
+      }
+    } catch (e) {
+      print("⚠️ Exception while launching dialer: $e");
+      _showDialerFallback(context, cleanNumber);
     }
   }
+
+  void _showDialerFallback(BuildContext context, String number) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Dialer Not Available"),
+        content: Text("Please call this number manually:\n$number"),
+        actions: [
+          TextButton(
+            onPressed: () {
+              // ✅ Clipboard copy
+              Clipboard.setData(ClipboardData(text: number));
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text("Copied: $number")),
+              );
+            },
+            child: const Text("Copy"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Close"),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+
+
+
+
+  ////////////////////////////////////////
+
+
+  // Future<void> _launchWhatsApp(BuildContext context, String number) async {
+  //   if (number.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text("WhatsApp number not available.")),
+  //     );
+  //     return;
+  //   }
+  //
+  //   // ✅ প্লাস বা স্পেস রিমুভ করে সঠিক ফরম্যাটে কনভার্ট
+  //   String cleanNumber = number.replaceAll("+", "").replaceAll(" ", "");
+  //
+  //   // ✅ WA-এর অফিসিয়াল লিংক
+  //   final Uri url = Uri.parse("https://wa.me/$cleanNumber");
+  //   print("WhatsApp Number: $cleanNumber");
+  //   print("Launching URL: $url");
+  //
+  //
+  //   try {
+  //     if (await canLaunchUrl(url)) {
+  //       await launchUrl(url, mode: LaunchMode.externalApplication); // ✅ WhatsApp App খুলবে
+  //     } else {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text("❌ WhatsApp not available on this device.")),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("⚠️ Error: $e")),
+  //     );
+  //   }
+  // }
+
+  /////////////////////////////////////////////////
+
 
   Future<void> _launchWhatsApp(BuildContext context, String number) async {
-    final Uri url = Uri.parse("https://wa.me/$number");
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
+    if (number.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("WhatsApp not available on this device.")),
+        const SnackBar(content: Text("WhatsApp number not available.")),
+      );
+      return;
+    }
+
+    // ✅ নম্বর পরিষ্কার (remove "+", spaces)
+    String cleanNumber = number.replaceAll("+", "").replaceAll(" ", "");
+    if (cleanNumber.startsWith("0")) {
+      cleanNumber = "88${cleanNumber.substring(1)}"; // ০১৭… হলে → ৮৮০১৭…
+    }
+
+    // ✅ Direct whatsapp intent (best way)
+    final Uri url = Uri.parse("whatsapp://send?phone=$cleanNumber&text=Hello");
+
+    print("Launching WhatsApp with → $url");
+
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("❌ WhatsApp not available on this device."),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("⚠️ Error: $e")),
       );
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    final siteProvider = Provider.of<SiteProvider>(context, listen: false);
-    siteProvider.fetchSiteData();
-  }
+
 
   @override
+  // void initState() {
+  //   super.initState();
+  //   final siteProvider = Provider.of<SiteProvider>(context, listen: false);
+  //   siteProvider.fetchSiteData();
+  // }
+  //
+  // @override
+
   Widget build(BuildContext context) {
     final siteProvider = Provider.of<SiteProvider>(context);
     final site = siteProvider.siteData;

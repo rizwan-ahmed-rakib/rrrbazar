@@ -27,11 +27,13 @@ class SiteProvider extends ChangeNotifier {
           // "Origin": "com.example.rrrbazar.com",
           // "Origin": "https://rrrbazar.com",
           // "Origin": "https://cobratopups.com",
-          "Origin": "https://zsshopbd.com",
           // "Origin": "https://bdgamebazar.com", // বা তোমার প্যাকেজ নাম
-
           // "Origin": backendUrl,
           // "Origin": "http://localhost:3000", // বা তোমার প্যাকেজ নাম
+
+          //////////////////dynamic origin form base_url.dart //////////////////////////
+
+          "Origin": ClientOrigin,
 
         },
       );
@@ -53,4 +55,14 @@ class SiteProvider extends ChangeNotifier {
     isLoading = false;
     notifyListeners();
   }
+
+  Future<void> refreshSiteData() async {
+    siteData = null;     // আগের ডেটা মুছে দিচ্ছি
+    hasError = false;    // পুরাতন error reset
+    notifyListeners();   // UI কে জানাচ্ছি
+
+    await fetchSiteData();  // আবার নতুন ডেটা আনছি
+  }
+
+
 }

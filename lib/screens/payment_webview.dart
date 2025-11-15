@@ -109,6 +109,30 @@ class _PaymentWebViewState extends State<PaymentWebView> {
                     "/myTransactionsPage",
                   );
                 }
+
+                // if (url.contains("undefined") || url.contains("cancel")) {
+                //   if (!mounted) return;
+                //
+                //   // 🔹 SnackBar দেখানো
+                //   ScaffoldMessenger.of(context).showSnackBar(
+                //     const SnackBar(
+                //       content: Text(
+                //         "❌ Transaction ID match করে নাই!",
+                //         style: TextStyle(fontWeight: FontWeight.w600),
+                //       ),
+                //       backgroundColor: Colors.redAccent,
+                //       behavior: SnackBarBehavior.floating,
+                //       duration: Duration(seconds: 3),
+                //     ),
+                //   );
+                //
+                //   // 🔹 Redirect to My Transactions Page
+                //   Navigator.pushReplacementNamed(
+                //     context,
+                //     "/myTransactionsPage",
+                //   );
+                // }
+
               },
             ),
           )

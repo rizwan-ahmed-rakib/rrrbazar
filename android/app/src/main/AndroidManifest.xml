@@ -38,10 +38,28 @@
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+
+<!--    <queries>-->
+<!--        <intent>-->
+<!--            <action android:name="android.intent.action.PROCESS_TEXT" />-->
+<!--            <data android:mimeType="text/plain" />-->
+<!--        </intent>-->
+<!--    </queries>-->
+
+
+    <!-- ✅ RIGHT PLACE FOR <queries> -->
     <queries>
+        <!-- For detecting WhatsApp -->
+        <package android:name="com.whatsapp" />
+        <package android:name="com.whatsapp.w4b" /> <!-- Business WhatsApp (optional) -->
+
+        <!-- For Web URL open capability -->
         <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT" />
-            <data android:mimeType="text/plain" />
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
         </intent>
     </queries>
+
+
+
 </manifest>

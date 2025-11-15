@@ -5,7 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import '../provider/base_url.dart' show backendUrl, saveTokenToLocalStorage;
+// import '../provider/base_url.dart' show backendUrl, saveTokenToLocalStorage;
+import '../provider/base_url.dart';
+import '../provider/shared_local_storage.dart';
 import '../provider/site_provider.dart';
 import '../provider/user_provider.dart';
 import 'custom_app_bar.dart';
@@ -99,7 +101,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     final url = Uri.parse("$backendUrl/api/v1/google-signup");
-    final clientOrigin = "http://localhost:3000"; // 🔹 তোমার client origin এখানে থাকবে
+    // final clientOrigin = "http://localhost:3000"; // 🔹 তোমার client origin এখানে থাকবে
+    final clientOrigin = ClientOrigin; // 🔹 তোমার client origin এখানে থাকবে
 
     try {
       print("🔹 ব্যবহৃত Google Client ID: ${_googleSignUp.clientId}");

@@ -1,14 +1,16 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-final String backendUrl = "https://zsshopbd.com";
-// final String backendUrl = "https://api.cobratopups.com";
-// final String backendUrl = "https://cae13c4bcbb8.ngrok-free.app";
+/////////////////main api url////////////////////////////////////
+
+final String backendUrl = "https://api.cobratopups.com";
+
+/////////////////// client origin to request ///////////////////
+
+// final String ClientOrigin = "https://zsshopbd.com";
+final String ClientOrigin = "https://bdgamebazar.com";
+
+/////////////////////////////////////////////
 
 
-
-Future<void> saveTokenToLocalStorage(String token) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('auth_token', token);
-}
 
 

@@ -103,169 +103,365 @@ class _TopupScreenState extends State<TopupScreen> {
       // ),
 
       appBar: CustomAppBar( logoUrl: logoUrl, isLoggedIn: user.isLoggedIn,),
+/////////////////////// screen with refresh is given bellow //////////
 
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
+      body: RefreshIndicator(
+        onRefresh: () async {
+          // // ✅ Reload user profile
+          // await Provider.of<UserProfileProvider>(context, listen: false)
+          //     .fetchUserProfile();
+          //
+          // // ✅ Reload Site Data
+          // Provider.of<SiteProvider>(context, listen: false).siteData = null;
+          // await Provider.of<SiteProvider>(context, listen: false)
+          //     .fetchSiteData();
 
-                  SizedBox(height: 20),
 
-                  // 🔥 BD GAME SHOP TITLE SECTION
-                  Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal:
-                      MediaQuery.of(context).size.width > 600 ? 24 : 16,
+          Provider.of<Topup_Products_Provider>(context, listen: false).refreshTopupProducts();
+
+
+          // ✅ Optional Snackbar
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("✅ Page Refreshed!")),
+          );
+
+          setState(() {}); // UI refresh
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(), // very important!
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            // children: [
+            //   /// আপনার আগের সব widget code 그대로 থাকবে এখানে...
+            // ],
+
+            children: [
+
+              SizedBox(height: 20),
+
+              // 🔥 BD GAME SHOP TITLE SECTION
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal:
+                  MediaQuery.of(context).size.width > 600 ? 24 : 16,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Games Topup",
+                      style: TextStyle(
+                        fontSize:
+                        MediaQuery.of(context).size.width > 600
+                            ? 24
+                            : 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue.shade800,
+                      ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Games Topup",
+                    if (MediaQuery.of(context).size.width > 600)
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.arrow_back_ios,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                          SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 15),
+
+              // 🔥 DYNAMIC PRODUCT GRID SECTION
+
+              Consumer<Topup_Products_Provider>(
+                builder: (context, productProvider, child) {
+                  // 🔄 লোডিং চলাকালীন
+                  if (productProvider.isLoading) {
+                    return Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+
+                  // ❌ যদি কোনো প্রোডাক্ট না থাকে
+                  if (productProvider.products.isEmpty) {
+                    return Container(
+                      padding: EdgeInsets.all(20),
+                      child: Center(
+                        child: Text(
+                          'কোন প্রোডাক্ট পাওয়া যায়নি',
                           style: TextStyle(
-                            fontSize:
-                            MediaQuery.of(context).size.width > 600
-                                ? 24
-                                : 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue.shade800,
+                            color: Colors.grey,
+                            fontSize: 16,
                           ),
                         ),
-                        if (MediaQuery.of(context).size.width > 600)
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.arrow_back_ios,
-                                size: 16,
-                                color: Colors.grey,
-                              ),
-                              SizedBox(width: 8),
-                              Icon(
-                                Icons.arrow_forward_ios,
-                                size: 16,
-                                color: Colors.grey,
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  }
 
-                  SizedBox(height: 15),
+                  // ✅ Responsive Grid
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      int crossAxisCount = 2; // 📱 মোবাইলে প্রতি সারিতে ২টি
+                      double aspectRatio = 0.75;
 
-                  // 🔥 DYNAMIC PRODUCT GRID SECTION
-
-                  Consumer<Topup_Products_Provider>(
-                    builder: (context, productProvider, child) {
-                      // 🔄 লোডিং চলাকালীন
-                      if (productProvider.isLoading) {
-                        return Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(20),
-                            child: CircularProgressIndicator(),
-                          ),
-                        );
+                      // 💻 বড় স্ক্রিনে column বাড়ানো হবে
+                      if (constraints.maxWidth > 1200) {
+                        crossAxisCount = 5;
+                        aspectRatio = 0.75;
+                      } else if (constraints.maxWidth > 800) {
+                        crossAxisCount = 4;
+                        aspectRatio = 0.8;
+                      } else if (constraints.maxWidth > 600) {
+                        crossAxisCount = 3;
+                        aspectRatio = 0.8;
                       }
 
-                      // ❌ যদি কোনো প্রোডাক্ট না থাকে
-                      if (productProvider.products.isEmpty) {
-                        return Container(
-                          padding: EdgeInsets.all(20),
-                          child: Center(
-                            child: Text(
-                              'কোন প্রোডাক্ট পাওয়া যায়নি',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                        );
-                      }
+                      return GridView.builder(
+                        physics: NeverScrollableScrollPhysics(),
+                        shrinkWrap: true,
+                        itemCount: productProvider.products.length,
+                        padding: EdgeInsets.symmetric(
+                          horizontal:
+                          MediaQuery.of(context).size.width > 600
+                              ? 24
+                              : 12,
+                        ),
+                        gridDelegate:
+                        SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxisCount,
+                          childAspectRatio: aspectRatio,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
+                        itemBuilder: (context, index) {
+                          final product = productProvider.products[index];
 
-                      // ✅ Responsive Grid
-                      return LayoutBuilder(
-                        builder: (context, constraints) {
-                          int crossAxisCount = 2; // 📱 মোবাইলে প্রতি সারিতে ২টি
-                          double aspectRatio = 0.75;
-
-                          // 💻 বড় স্ক্রিনে column বাড়ানো হবে
-                          if (constraints.maxWidth > 1200) {
-                            crossAxisCount = 5;
-                            aspectRatio = 0.75;
-                          } else if (constraints.maxWidth > 800) {
-                            crossAxisCount = 4;
-                            aspectRatio = 0.8;
-                          } else if (constraints.maxWidth > 600) {
-                            crossAxisCount = 3;
-                            aspectRatio = 0.8;
-                          }
-
-                          return GridView.builder(
-                            physics: NeverScrollableScrollPhysics(),
-                            shrinkWrap: true,
-                            itemCount: productProvider.products.length,
-                            padding: EdgeInsets.symmetric(
-                              horizontal:
-                              MediaQuery.of(context).size.width > 600
-                                  ? 24
-                                  : 12,
-                            ),
-                            gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: crossAxisCount,
-                              childAspectRatio: aspectRatio,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                            ),
-                            itemBuilder: (context, index) {
-                              final product = productProvider.products[index];
-
-                              return GestureDetector(
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    '/ordersuggestion',
-                                    arguments: {
-                                      'id': product.id ?? 0,
-                                      'image':
-                                      '$backendUrl/images/${product.logo}',
-                                      'title':
-                                      product.name ?? 'Unnamed Product',
-                                      'subtitle': product.topupType ?? 'Topup',
-                                      'price': 'ক্রয় করুন',
-                                      'description': _stripHtmlTags(
-                                        product.rules ?? 'কোন নিয়ম নেই',
-                                      ),
-                                    },
-                                  );
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                '/ordersuggestion',
+                                arguments: {
+                                  'id': product.id ?? 0,
+                                  'image':
+                                  '$backendUrl/images/${product.logo}',
+                                  'title':
+                                  product.name ?? 'Unnamed Product',
+                                  'subtitle': product.topupType ?? 'Topup',
+                                  'price': 'ক্রয় করুন',
+                                  'description': _stripHtmlTags(
+                                    product.rules ?? 'কোন নিয়ম নেই',
+                                  ),
                                 },
-                                child: GameCard(
-                                  image: '$backendUrl/images/${product.logo}',
-                                  title: product.name ?? 'Unnamed Product',
-                                  // subtitle: product.topupType ?? 'Topup',
-                                  // price: "ক্রয় করুন",
-                                ),
                               );
                             },
+                            child: GameCard(
+                              image: '$backendUrl/images/${product.logo}',
+                              title: product.name ?? 'Unnamed Product',
+                              // subtitle: product.topupType ?? 'Topup',
+                              // price: "ক্রয় করুন",
+                            ),
                           );
                         },
                       );
                     },
-                  ),
-
-                  SizedBox(height: 20),
-
-                  // 🔥 FOOTER SECTION
-                  CustomFooter(),
-                ],
+                  );
+                },
               ),
-            ),
+
+              SizedBox(height: 20),
+
+              // 🔥 FOOTER SECTION
+              CustomFooter(),
+            ],
+
+
           ),
-        ],
+        ),
       ),
+
+/////////////////////////////////////////////////////
+
+/////////////////////// screen without refresh is given bellow //////////
+
+      // body: Column(
+      //   children: [
+      //     Expanded(
+      //       child: SingleChildScrollView(
+      //         child: Column(
+      //           children: [
+      //
+      //             SizedBox(height: 20),
+      //
+      //             // 🔥 BD GAME SHOP TITLE SECTION
+      //             Padding(
+      //               padding: EdgeInsets.symmetric(
+      //                 horizontal:
+      //                 MediaQuery.of(context).size.width > 600 ? 24 : 16,
+      //               ),
+      //               child: Row(
+      //                 mainAxisAlignment: MainAxisAlignment.center,
+      //                 children: [
+      //                   Text(
+      //                     "Games Topup",
+      //                     style: TextStyle(
+      //                       fontSize:
+      //                       MediaQuery.of(context).size.width > 600
+      //                           ? 24
+      //                           : 20,
+      //                       fontWeight: FontWeight.bold,
+      //                       color: Colors.blue.shade800,
+      //                     ),
+      //                   ),
+      //                   if (MediaQuery.of(context).size.width > 600)
+      //                     Row(
+      //                       children: [
+      //                         Icon(
+      //                           Icons.arrow_back_ios,
+      //                           size: 16,
+      //                           color: Colors.grey,
+      //                         ),
+      //                         SizedBox(width: 8),
+      //                         Icon(
+      //                           Icons.arrow_forward_ios,
+      //                           size: 16,
+      //                           color: Colors.grey,
+      //                         ),
+      //                       ],
+      //                     ),
+      //                 ],
+      //               ),
+      //             ),
+      //
+      //             SizedBox(height: 15),
+      //
+      //             // 🔥 DYNAMIC PRODUCT GRID SECTION
+      //
+      //             Consumer<Topup_Products_Provider>(
+      //               builder: (context, productProvider, child) {
+      //                 // 🔄 লোডিং চলাকালীন
+      //                 if (productProvider.isLoading) {
+      //                   return Center(
+      //                     child: Padding(
+      //                       padding: EdgeInsets.all(20),
+      //                       child: CircularProgressIndicator(),
+      //                     ),
+      //                   );
+      //                 }
+      //
+      //                 // ❌ যদি কোনো প্রোডাক্ট না থাকে
+      //                 if (productProvider.products.isEmpty) {
+      //                   return Container(
+      //                     padding: EdgeInsets.all(20),
+      //                     child: Center(
+      //                       child: Text(
+      //                         'কোন প্রোডাক্ট পাওয়া যায়নি',
+      //                         style: TextStyle(
+      //                           color: Colors.grey,
+      //                           fontSize: 16,
+      //                         ),
+      //                       ),
+      //                     ),
+      //                   );
+      //                 }
+      //
+      //                 // ✅ Responsive Grid
+      //                 return LayoutBuilder(
+      //                   builder: (context, constraints) {
+      //                     int crossAxisCount = 2; // 📱 মোবাইলে প্রতি সারিতে ২টি
+      //                     double aspectRatio = 0.75;
+      //
+      //                     // 💻 বড় স্ক্রিনে column বাড়ানো হবে
+      //                     if (constraints.maxWidth > 1200) {
+      //                       crossAxisCount = 5;
+      //                       aspectRatio = 0.75;
+      //                     } else if (constraints.maxWidth > 800) {
+      //                       crossAxisCount = 4;
+      //                       aspectRatio = 0.8;
+      //                     } else if (constraints.maxWidth > 600) {
+      //                       crossAxisCount = 3;
+      //                       aspectRatio = 0.8;
+      //                     }
+      //
+      //                     return GridView.builder(
+      //                       physics: NeverScrollableScrollPhysics(),
+      //                       shrinkWrap: true,
+      //                       itemCount: productProvider.products.length,
+      //                       padding: EdgeInsets.symmetric(
+      //                         horizontal:
+      //                         MediaQuery.of(context).size.width > 600
+      //                             ? 24
+      //                             : 12,
+      //                       ),
+      //                       gridDelegate:
+      //                       SliverGridDelegateWithFixedCrossAxisCount(
+      //                         crossAxisCount: crossAxisCount,
+      //                         childAspectRatio: aspectRatio,
+      //                         crossAxisSpacing: 12,
+      //                         mainAxisSpacing: 12,
+      //                       ),
+      //                       itemBuilder: (context, index) {
+      //                         final product = productProvider.products[index];
+      //
+      //                         return GestureDetector(
+      //                           onTap: () {
+      //                             Navigator.pushNamed(
+      //                               context,
+      //                               '/ordersuggestion',
+      //                               arguments: {
+      //                                 'id': product.id ?? 0,
+      //                                 'image':
+      //                                 '$backendUrl/images/${product.logo}',
+      //                                 'title':
+      //                                 product.name ?? 'Unnamed Product',
+      //                                 'subtitle': product.topupType ?? 'Topup',
+      //                                 'price': 'ক্রয় করুন',
+      //                                 'description': _stripHtmlTags(
+      //                                   product.rules ?? 'কোন নিয়ম নেই',
+      //                                 ),
+      //                               },
+      //                             );
+      //                           },
+      //                           child: GameCard(
+      //                             image: '$backendUrl/images/${product.logo}',
+      //                             title: product.name ?? 'Unnamed Product',
+      //                             // subtitle: product.topupType ?? 'Topup',
+      //                             // price: "ক্রয় করুন",
+      //                           ),
+      //                         );
+      //                       },
+      //                     );
+      //                   },
+      //                 );
+      //               },
+      //             ),
+      //
+      //             SizedBox(height: 20),
+      //
+      //             // 🔥 FOOTER SECTION
+      //             CustomFooter(),
+      //           ],
+      //         ),
+      //       ),
+      //     ),
+      //   ],
+      // ),
+
+////////////////////////////////////////////////
     );
   }
 }

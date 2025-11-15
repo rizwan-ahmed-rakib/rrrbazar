@@ -1,109 +1,183 @@
-import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+// return Scaffold(
+//   drawer: CustomDrawer(),
+//   // appBar: AppBar(
+//   //   automaticallyImplyLeading: false,
+//   //   // 🔥 ডিফল্ট Hamburger আইকন লুকিয়ে দিলাম
+//   //   title: Row(
+//   //     children: [
+//   //       GestureDetector(
+//   //         onTap: () {
+//   //           // 🏠 এখানে তোমার HomeScreen এ নিয়ে যাও
+//   //           Navigator.pushReplacement(
+//   //             context,
+//   //             MaterialPageRoute(builder: (context) => HomeScreen()),
+//   //           );
+//   //         },
+//   //         // child: Image.asset("assets/logo.png", height: 30,
+//   //         child: Image.network(logoUrl, height: 30,
+//   //         ),
+//   //       ),
+//   //     ],
+//   //   ),
+//   //   actions: [
+//   //     Builder(
+//   //       builder: (context) {
+//   //         return InkWell(
+//   //           onTap: () {
+//   //             Scaffold.of(context).openDrawer(); // ✅ Drawer open হবে
+//   //           },
+//   //           child: LayoutBuilder(
+//   //             builder: (context, constraints) {
+//   //               if (constraints.maxWidth < 400) {
+//   //                 // Mobile এ শুধু Image
+//   //                 return const Padding(
+//   //                   padding: EdgeInsets.only(right: 10),
+//   //                   child: CircleAvatar(
+//   //                     backgroundImage: AssetImage("assets/user.png"),
+//   //                   ),
+//   //                 );
+//   //               } else {
+//   //                 // Tablet/Desktop এ Full Profile
+//   //                 return Row(
+//   //                   children: const [
+//   //                     CircleAvatar(backgroundImage: AssetImage("assets/user.png")),
+//   //                     SizedBox(width: 6),
+//   //                     Text("Hellowfarjan"),
+//   //                     Icon(Icons.arrow_drop_down),
+//   //                     SizedBox(width: 10),
+//   //                   ],
+//   //                 );
+//   //               }
+//   //             },
+//   //           ),
+//   //         );
+//   //       },
+//   //     ),
+//   //   ],
+//   // ),
+//
+//
+//   appBar: CustomAppBar( logoUrl: logoUrl, isLoggedIn: user.isLoggedIn,),
+//
+//
+//
+//   backgroundColor: const Color(0xfff9fafb),
+//
+//
+//
+//   body: SingleChildScrollView(
+//     child: Column(
+//       children: [
+//         // 🔹 Top Banner
+//         Container(
+//           height: 150,
+//           width: double.infinity,
+//           color: Colors.blueAccent,
+//         ),
+//
+//         // 🔹 Profile Image and Info
+//         Transform.translate(
+//           offset: const Offset(0, -75),
+//           child: Column(
+//             children: [
+//               Container(
+//                 width: 130,
+//                 height: 130,
+//                 decoration: BoxDecoration(
+//                   borderRadius: BorderRadius.circular(100),
+//                   border: Border.all(color: Colors.white, width: 4),
+//                   image:  DecorationImage(
+//                     // image: AssetImage("assets/user.png"),
+//                     image: NetworkImage(userprofiledata?.avatar ?? ''),
+//                     // NetworkImage(
+//                     //     'https://lh3.googleusercontent.com/a/ACg8ocIYFrq63uiy7rJWZPC9CSYHAKyBMIcwy-Ccdg6Fpjl3O_zKDpE=s96-c'),
+//                     fit: BoxFit.cover,
+//                   ),
+//                 ),
+//               ),
+//               const SizedBox(height: 10),
+//               Text(userprofiledata?.username ?? 'Unknown',
+//                   style: const TextStyle(
+//                       fontSize: 22, fontWeight: FontWeight.bold)),
+//
+//               const SizedBox(height: 20),
+//
+//               // 🔹 Info Cards
+//               _infoCard("User ID:", userprofiledata!.id.toString()),
+//               _infoCard("Email:", userprofiledata.email ?? ''),
+//               _phoneSection(context),
+//               // _changePasswordSection(),
+//             ],
+//           ),
+//         ),
+//
+//
+//         CustomFooter(),
+//
+//       ],
+//
+//     ),
+//   ),
+//   // bottomNavigationBar: CustomFooter(),
+// );
 
-class GoogleSmartSignInButton extends StatefulWidget {
-  const GoogleSmartSignInButton({super.key});
+//////////////////////////////////////////////////////////////
 
-  @override
-  State<GoogleSmartSignInButton> createState() =>
-      _GoogleSmartSignInButtonState();
-}
 
-class _GoogleSmartSignInButtonState extends State<GoogleSmartSignInButton> {
-  final GoogleSignIn _googleSignIn = GoogleSignIn(scopes: ['email', 'profile']);
-  GoogleSignInAccount? _account;
 
-  @override
-  void initState() {
-    super.initState();
-    _checkLoggedInAccount();
-  }
 
-  Future<void> _checkLoggedInAccount() async {
-    final account = await _googleSignIn.signInSilently();
-    setState(() => _account = account);
-  }
-
-  Future<void> _handleSignIn() async {
-    final account = await _googleSignIn.signIn();
-    if (account != null) {
-      debugPrint("✅ Signed in: ${account.displayName}");
-      setState(() => _account = account);
-      // এখানে তোমার backend API তে পাঠাতে পারো
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final user = _account;
-
-    return InkWell(
-      onTap: _handleSignIn,
-      borderRadius: BorderRadius.circular(40),
-      child: Container(
-        height: 50,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFF4285F4), // Google blue
-          borderRadius: BorderRadius.circular(40),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (user != null)
-              CircleAvatar(
-                radius: 16,
-                backgroundImage: NetworkImage(user.photoUrl ?? ""),
-              )
-            else
-              const CircleAvatar(
-                radius: 16,
-                backgroundImage: NetworkImage(
-                    "https://img.icons8.com/color/48/000000/google-logo.png"),
-                backgroundColor: Colors.white,
-              ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    user != null
-                        ? "Sign in as ${user.displayName}"
-                        : "Sign in with Google",
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (user != null)
-                    Text(
-                      user.email,
-                      style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          overflow: TextOverflow.ellipsis),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            Container(
-              padding: const EdgeInsets.all(5),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Image.network(
-                "https://img.icons8.com/color/48/000000/google-logo.png",
-                height: 20,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// appBar: AppBar(
+//     automaticallyImplyLeading: false,
+//     // 🔥 ডিফল্ট Hamburger আইকন লুকিয়ে দিলাম
+//     title: Row(
+//       children: [
+//         GestureDetector(
+//           onTap: () {
+//             // 🏠 এখানে তোমার HomeScreen এ নিয়ে যাও
+//             Navigator.pushReplacement(
+//               context,
+//               MaterialPageRoute(builder: (context) => HomeScreen()),
+//             );
+//           },
+//           // child: Image.asset("assets/logo.png", height: 30,
+//           child: Image.network(logoUrl, height: 30,
+//           ),
+//         ),
+//       ],
+//     ),
+//     actions: [
+//       Builder(
+//         builder: (context) {
+//           return InkWell(
+//             onTap: () {
+//               Scaffold.of(context).openDrawer(); // ✅ Drawer open হবে
+//             },
+//             child: LayoutBuilder(
+//               builder: (context, constraints) {
+//                 if (constraints.maxWidth < 400) {
+//                   // Mobile এ শুধু Image
+//                   return const Padding(
+//                     padding: EdgeInsets.only(right: 10),
+//                     child: CircleAvatar(
+//                       backgroundImage: AssetImage("assets/user.png"),
+//                     ),
+//                   );
+//                 } else {
+//                   // Tablet/Desktop এ Full Profile
+//                   return Row(
+//                     children: const [
+//                       CircleAvatar(backgroundImage: AssetImage("assets/user.png")),
+//                       SizedBox(width: 6),
+//                       Text("Hellowfarjan"),
+//                       Icon(Icons.arrow_drop_down),
+//                       SizedBox(width: 10),
+//                     ],
+//                   );
+//                 }
+//               },
+//             ),
+//           );
+//         },
+//       ),
+//     ],
+//   ),

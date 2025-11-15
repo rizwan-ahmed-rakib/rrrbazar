@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../provider/site_provider.dart';
 import '../provider/user_profile_provider.dart';
+import '../provider/user_provider.dart';
 import 'login.dart';
 
 
@@ -11,6 +13,41 @@ class CustomDrawer extends StatelessWidget {
   String userName = "";
   String userPhoto = "";
   CustomDrawer({Key? key}) : super(key: key);
+
+
+  Future<void> _launchWhatsApp(BuildContext context, String number) async {
+    if (number.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("WhatsApp number not available.")),
+      );
+      return;
+    }
+
+    // ✅ নম্বর পরিষ্কার করা: +, space, leading zero হ্যান্ডেল
+    String cleanNumber = number.replaceAll("+", "").replaceAll(" ", "");
+    if (cleanNumber.startsWith("0")) {
+      cleanNumber = "88${cleanNumber.substring(1)}";
+    }
+
+    final Uri url = Uri.parse("whatsapp://send?phone=$cleanNumber&text=Hello");
+
+    print("Launching WhatsApp → $url");
+
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("❌ WhatsApp not available on this device.")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("⚠️ Error: $e")),
+      );
+    }
+  }
+
 
 
   final List<Map<String, dynamic>> menuItems = const [
@@ -33,11 +70,20 @@ class CustomDrawer extends StatelessWidget {
     final currentRoute = ModalRoute.of(context)?.settings.name;
     final profileProvider = Provider.of<UserProfileProvider>(context);
     final profile = profileProvider.profileData?.data;
+    final userProvider = Provider.of<UserProvider>(context);
+    final siteProvider = Provider.of<SiteProvider>(context);
+    final whatssappNumber = siteProvider.siteData?.whatsapp;
+
 
 
     // ✅ Provider থেকে ডাটা থাকলে সেটাকে অগ্রাধিকার দিচ্ছি
-    final displayName = profile?.username ?? userName;
-    final displayPhoto = profile?.avatar ?? userPhoto;
+
+    // final displayName = profile?.username ?? userName;
+    // final displayPhoto = profile?.avatar ?? userPhoto;
+
+    final displayName = userProvider.name ?? "";
+    final displayPhoto = userProvider.photoUrl ?? "";
+    // final displayEmail = userProvider.email ?? "";
 
     return Drawer(
       width: MediaQuery.of(context).size.width * 0.75,
@@ -80,7 +126,10 @@ class CustomDrawer extends StatelessWidget {
                       ),
                       Text(
                         // "rizwan35-2579@diu.edu.bd",
-                       " ${profile?.email}",
+
+                       // " ${profile?.email}",
+
+                          "${userProvider.email}",
                         style: TextStyle(fontSize: 13, color: Colors.black54),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -145,32 +194,42 @@ class CustomDrawer extends StatelessWidget {
 
                 return InkWell(
 
-                  // onTap: () {
-                  //   if (currentRoute != item["route"]) {
+
+
+                  // onTap: () async {
+                  //   // 🔹 Drawer বন্ধ করো
+                  //   Navigator.pop(context);
+                  //
+                  //   if (item["text"] == "Contact Us") {
+                  //     const phoneNumber = "+8801711223344"; // ✅ তোমার WhatsApp নম্বর
+                  //     final Uri whatsappUrl = Uri.parse("https://wa.me/$phoneNumber?text=Hello%20Rangvo%20Support!");
+                  //
+                  //     if (await canLaunchUrl(whatsappUrl)) {
+                  //       await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
+                  //     } else {
+                  //       ScaffoldMessenger.of(context).showSnackBar(
+                  //         const SnackBar(content: Text("Could not open WhatsApp")),
+                  //       );
+                  //     }
+                  //
+                  //   } else if (currentRoute != item["route"]) {
                   //     Navigator.pushNamed(context, item["route"]);
                   //   }
                   // },
 
+
                   onTap: () async {
-                    // 🔹 Drawer বন্ধ করো
-                    Navigator.pop(context);
+                    Navigator.pop(context); // Drawer বন্ধ করবে
 
                     if (item["text"] == "Contact Us") {
-                      const phoneNumber = "+8801711223344"; // ✅ তোমার WhatsApp নম্বর
-                      final Uri whatsappUrl = Uri.parse("https://wa.me/$phoneNumber?text=Hello%20Rangvo%20Support!");
-
-                      if (await canLaunchUrl(whatsappUrl)) {
-                        await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text("Could not open WhatsApp")),
-                        );
-                      }
-
-                    } else if (currentRoute != item["route"]) {
+                      // await _launchWhatsApp(context, "+8801711223344");
+                      await _launchWhatsApp(context, whatssappNumber!);
+                    }
+                    else if (currentRoute != item["route"]) {
                       Navigator.pushNamed(context, item["route"]);
                     }
                   },
+
 
                   child: Container(
                     color: isActive ? Colors.blue.withOpacity(0.08) : null,

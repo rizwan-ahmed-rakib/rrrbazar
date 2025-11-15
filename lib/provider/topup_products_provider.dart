@@ -30,8 +30,13 @@ class Topup_Products_Provider with ChangeNotifier {
           // "Origin": "com.example.rrrbazar.com", // বা তোমার প্যাকেজ নাম
           // "Origin": backendUrl, // বা তোমার প্যাকেজ নাম
           // "Origin": "https://cobratopups.com", // বা তোমার প্যাকেজ নাম
-          "Origin": "https://zsshopbd.com", // বা তোমার প্যাকেজ নাম
+          // "Origin": "https://zsshopbd.com", // বা তোমার প্যাকেজ নাম
           // "Origin": "https://bdgamebazar.com", // বা তোমার প্যাকেজ নাম
+
+          //////////////////dynamic origin fron base_url.dart /////////
+
+          "Origin": ClientOrigin,
+
         },
       );
 
@@ -56,4 +61,10 @@ class Topup_Products_Provider with ChangeNotifier {
     _isLoading = false;
     notifyListeners();
   }
+
+  Future<void> refreshTopupProducts() async {
+    hasFetched = false;  // 🔁 আবার API কল করার অনুমতি দিচ্ছি
+    await fetchTopupProducts();
+  }
+
 }

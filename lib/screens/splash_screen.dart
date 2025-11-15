@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../provider/user_provider.dart';
 import 'home_screen.dart';
+import 'login.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -36,19 +39,36 @@ class _SplashScreenState extends State<SplashScreen>
     });
 
     // Navigate after delay
-    Future.delayed(const Duration(seconds: 3), () {
+    Future.delayed(const Duration(seconds: 3), () async {
       if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          PageRouteBuilder(
-            transitionDuration: const Duration(milliseconds: 800),
-            pageBuilder: (_, __, ___) => HomeScreen(),
-            transitionsBuilder: (_, anim, __, child) => FadeTransition(
-              opacity: anim,
-              child: child,
+        final userProvider = Provider.of<UserProvider>(context, listen: false);
+        await userProvider.loadUserFromPrefs(); // 🔹 Load user
+
+        if (userProvider.isLoggedIn) {
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              transitionDuration: const Duration(milliseconds: 800),
+              pageBuilder: (_, __, ___) => HomeScreen(),
+              transitionsBuilder: (_, anim, __, child) => FadeTransition(
+                opacity: anim,
+                child: child,
+              ),
             ),
-          ),
-        );
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              transitionDuration: const Duration(milliseconds: 800),
+              pageBuilder: (_, __, ___) => const LoginScreen(),
+              transitionsBuilder: (_, anim, __, child) => FadeTransition(
+                opacity: anim,
+                child: child,
+              ),
+            ),
+          );
+        }
       }
     });
   }
