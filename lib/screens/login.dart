@@ -44,6 +44,8 @@ class _LoginScreenState extends State<LoginScreen> {
     _checkIfAlreadySignedIn(); // 🔹 অ্যাপ চালু হলে আগের লগইন চেক করবে
   }
 
+
+
   // 🔹 আগের Google লগইন চেক করা
   Future<void> _checkIfAlreadySignedIn() async {
     final user = await _googleSignIn.signInSilently();
@@ -252,6 +254,8 @@ class _LoginScreenState extends State<LoginScreen> {
     final String profileImage = _currentUser?.photoUrl ??
         "https://img.icons8.com/color/48/000000/google-logo.png";
 
+
+
     return Scaffold(
       backgroundColor: const Color(0xfff7f9fc),
       drawer: CustomDrawer(),
@@ -377,6 +381,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
 
   Widget _buildLoginCard() {
+    final siteProvider = Provider.of<SiteProvider>(context);
+    final site = siteProvider.siteData;
+    // 🔹 Dynamic background color
+
+    // Color bgColor = Colors.lightBlueAccent;
+    Color bgColor = Colors.transparent;
+    try {
+      bgColor = Color(int.parse("0xff${site?.color}"));
+    } catch (_) {}
+
+
     return Center(
       child: Container(
         width: 400,
@@ -403,7 +418,8 @@ class _LoginScreenState extends State<LoginScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
-                side: const BorderSide(color: Colors.grey),
+                // side: const BorderSide(color: Colors.grey),
+                side: BorderSide(color:bgColor),
                 minimumSize: const Size(double.infinity, 45),
               ),
               icon: Image.network(

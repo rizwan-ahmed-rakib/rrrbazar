@@ -200,6 +200,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider;
 
+
+    // 🔹 Dynamic background color
+
+    // Color bgColor = Colors.lightBlueAccent;
+    Color bgColor = Colors.transparent;
+    try {
+      bgColor = Color(int.parse("0xff${site?.color}"));
+    } catch (_) {}
+
     return Scaffold(
       backgroundColor: Colors.white,
 
@@ -254,7 +263,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         onPressed: _handleGoogleSignUp,
                         style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.grey),
+                          // side: const BorderSide(color: Colors.grey),
+                          side: BorderSide(color:bgColor),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),

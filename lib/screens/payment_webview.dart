@@ -18,6 +18,7 @@ class _PaymentWebViewState extends State<PaymentWebView> {
   bool _isLoading = true; // ✅ Loading indicator
   bool _isProfileUpdated = false;
 
+
   @override
   void initState() {
     super.initState();
@@ -110,28 +111,45 @@ class _PaymentWebViewState extends State<PaymentWebView> {
                   );
                 }
 
-                // if (url.contains("undefined") || url.contains("cancel")) {
-                //   if (!mounted) return;
-                //
-                //   // 🔹 SnackBar দেখানো
-                //   ScaffoldMessenger.of(context).showSnackBar(
-                //     const SnackBar(
-                //       content: Text(
-                //         "❌ Transaction ID match করে নাই!",
-                //         style: TextStyle(fontWeight: FontWeight.w600),
-                //       ),
-                //       backgroundColor: Colors.redAccent,
-                //       behavior: SnackBarBehavior.floating,
-                //       duration: Duration(seconds: 3),
-                //     ),
-                //   );
-                //
-                //   // 🔹 Redirect to My Transactions Page
-                //   Navigator.pushReplacementNamed(
-                //     context,
-                //     "/myTransactionsPage",
-                //   );
-                // }
+                if (url.contains("undefined") || url.contains("cancel")) {
+
+
+                  if (!mounted) return;
+
+                  // 🔹 SnackBar দেখানো
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        "❌ Transaction ID match করে নাই! "
+                            "please try again",
+                        style: TextStyle(fontWeight: FontWeight.w600,color:Colors.red),
+                      ),
+                      backgroundColor: Colors.yellowAccent,
+                      behavior: SnackBarBehavior.floating,
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+
+
+                  // ⏳ 1 সেকেন্ড অপেক্ষা করো যাতে SnackBar দেখায়
+                  await Future.delayed(const Duration(milliseconds: 1200));
+
+                  // // 🔹 Redirect to My Transactions Page
+                  // Navigator.pushReplacementNamed(
+                  //   context,
+                  //   "/myTransactionsPage",
+                  // );
+
+
+                  // 🔙 আগের page এ ফিরে যাওয়ার চেষ্টা
+                  bool canGoBack = await _controller.canGoBack();   // <-- এখানেই লিখবে
+
+                  if (canGoBack) {
+                    _controller.goBack();   // 🔙 আগের পেজে ফিরে যাবে
+                  } else {
+                    print("❌ No previous page in WebView stack.");
+                  }
+                }
 
               },
             ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../provider/site_provider.dart';
 import '../provider/user_profile_provider.dart';
 import 'home_screen.dart';
 import 'login.dart';
@@ -52,6 +53,21 @@ class _CustomAppBarState extends State<CustomAppBar> {
   Widget build(BuildContext context) {
     final profileProvider = Provider.of<UserProfileProvider>(context);
     final profile = profileProvider.profileData?.data;
+    final siteProvider = Provider.of<SiteProvider>(context);
+    final site = siteProvider.siteData;
+
+
+    // 🔹 Dynamic background color
+
+    // Color bgColor = Colors.lightBlueAccent;
+    Color bgColor = Colors.transparent;
+    try {
+      bgColor = Color(int.parse("0xff${site?.color}"));
+    } catch (_) {}
+
+
+
+
 
 
     // ✅ Provider থেকে ডাটা থাকলে সেটাকে অগ্রাধিকার দিচ্ছি
@@ -182,8 +198,10 @@ class _CustomAppBarState extends State<CustomAppBar> {
                             builder: (context) => const RegisterScreen()),
                       );
                     },
+
                     style: TextButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      // backgroundColor: Colors.blue,
+                      backgroundColor: bgColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),
                       ),
@@ -207,8 +225,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
                       backgroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(6),
-                        side: const BorderSide(
-                          color: Colors.lightBlueAccent,
+                        side: BorderSide(
+                          // color: Colors.lightBlueAccent,
+                          color:bgColor,
                           width: 2,
                         ),
                       ),

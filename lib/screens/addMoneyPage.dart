@@ -35,6 +35,15 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
   Widget build(BuildContext context) {
     final siteProvider = Provider.of<SiteProvider>(context);
     final site = siteProvider.siteData;
+
+    // 🔹 Dynamic background color
+
+    // Color bgColor = Colors.lightBlueAccent;
+    Color bgColor = Colors.transparent;
+    try {
+      bgColor = Color(int.parse("0xff${site?.color}"));
+    } catch (_) {}
+
     final logoUrl = "$backendUrl/images/${site?.logo}";
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider;
@@ -73,7 +82,8 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
                                 // Header
                                 Container(
                                   decoration: BoxDecoration(
-                                    color: Colors.lightBlueAccent,
+                                    // color: Colors.lightBlueAccent,
+                                    color: bgColor,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -134,14 +144,17 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
                                           borderRadius: BorderRadius.circular(12),
                                           border: Border.all(
                                               color: isSelected
-                                                  ? Colors.blue.shade600
+                                                  // ? Colors.blue.shade600
+                                                  ? bgColor.withOpacity(0.6)
                                                   : Colors.grey.shade300,
                                               width: 2),
                                           gradient: isSelected
                                               ? LinearGradient(
                                               colors: [
-                                                Colors.blue.shade300,
-                                                Colors.blue.shade500
+                                                // Colors.blue.shade300,
+                                                // Colors.blue.shade500
+                                                bgColor.withOpacity(0.5),
+                                                bgColor.withOpacity(0.7)
                                               ],
                                               begin: Alignment.topCenter,
                                               end: Alignment.bottomCenter)
@@ -232,6 +245,7 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
                                                   if (isSelected) ...[
                                                     const SizedBox(width: 4),
                                                     const Icon(Icons.check_circle, color: Colors.white, size: 18),
+                                                    // Icon(Icons.check_circle, color: bgColor, size: 18),
                                                   ],
                                                 ],
                                               ),
@@ -265,7 +279,8 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
                                 children: [
                                   Container(
                                     decoration: BoxDecoration(
-                                      color: Colors.lightBlueAccent,
+                                      // color: Colors.lightBlueAccent,
+                                      color: bgColor,
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     padding: EdgeInsets.symmetric(
@@ -413,7 +428,8 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
                                           fontWeight: FontWeight.bold),
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.lightBlueAccent,
+                                      // backgroundColor: Colors.lightBlueAccent,
+                                      backgroundColor: bgColor,
                                       minimumSize: Size(double.infinity, 45),
                                       shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(8)),
