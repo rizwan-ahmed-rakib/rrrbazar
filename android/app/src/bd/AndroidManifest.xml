@@ -1,0 +1,14 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<!--    package="com.bdgamebazar.app">-->
+
+    <application
+        android:icon="@mipmap/ic_launcher"
+        android:label="BD GameBazar">
+
+        <!-- Firebase / Google OAuth Redirect -->
+        <meta-data
+            android:name="com.google.android.gms.auth.api.signin.REVERSE_CLIENT_ID"
+            android:value="${appAuthRedirectScheme}" />
+    </application>
+
+</manifest>

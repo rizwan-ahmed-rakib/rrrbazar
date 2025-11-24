@@ -82,16 +82,48 @@ flutter:
     - assets/logo_2.png
     - assets/add_money.jpg
     - assets/wallet.png
+    - assets/walletimage/zs_wallet.png
+    - assets/walletimage/bd_wallet.png
+    - assets/walletimage/cobra_wallet.png
+    - assets/walletimage/pipo_wallet.png
+    - assets/walletimage/evo_wallet.png
+    - assets/walletimage/rangvo_wallet.png
+    - assets/appicon/zs.png
+    - assets/appicon/bd.png
+    - assets/appicon/cobra.png
+    - assets/appicon/pipo.png
+    - assets/appicon/evo.png
+    - assets/appicon/rangvo.png
     - assets/auto_payment.jpeg
     - assets/rrrwalletimage.png
     - assets/5.jpg
     - assets/product_image/
 
 
+#flutter_launcher_icons:
+#  android: true
+##  ios: true
+#  image_path: "assets/appicon/app_icon.png"
+
+
 flutter_launcher_icons:
   android: true
-#  ios: true
+#  ios: false
   image_path: "assets/appicon/app_icon.png"
+
+  flavors:
+    cobra:
+      image_path: "assets/appicon/cobra.png"
+
+    bd:
+      image_path: "assets/appicon/bd.png"
+
+    zs:
+      image_path: "assets/appicon/zs_wallet.png"
+
+    rrr:
+      image_path: "assets/appicon/rrr.png"
+
 
 
 

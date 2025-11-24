@@ -848,7 +848,7 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
   }
 
 
-
+////////////////////////////////////////
 
 
 
@@ -864,10 +864,106 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
     try {
       bgColor = Color(int.parse("0xff${site?.color}"));
     } catch (_) {}
+    //////////////////////
+
+    // return LayoutBuilder(
+    //   builder: (context, constraints) {
+    //     // ছোট স্ক্রিন হলে childAspectRatio কমিয়ে দিচ্ছি
+    //     double aspectRatio = constraints.maxWidth < 360 ? 1.6 : 2.0;
+    //     // double aspectRatio = constraints.maxWidth < 360 ? 1.5 : 2.0;
+    //
+    //     return GridView.builder(
+    //       itemCount: rechargePacks.length,
+    //       shrinkWrap: true,
+    //       physics: const NeverScrollableScrollPhysics(),
+    //       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+    //         crossAxisCount: 2,
+    //         crossAxisSpacing: 10,
+    //         mainAxisSpacing: 10,
+    //         childAspectRatio: aspectRatio,
+    //       ),
+    //       itemBuilder: (context, index) {
+    //         bool isSelected = selectedPackIndex == index;
+    //         final pack = rechargePacks[index];
+    //
+    //         return GestureDetector(
+    //           onTap: () {
+    //             setState(() {
+    //               selectedPackIndex = index;
+    //               selectedPackagePrice = _convertToDouble(pack["price"]);
+    //               selectedPackageName = pack["name"];
+    //               selectedPackageId = pack["id"];
+    //             });
+    //           },
+    //           child: AnimatedContainer(
+    //             duration: const Duration(milliseconds: 200),
+    //             padding: const EdgeInsets.all(6),
+    //             decoration: BoxDecoration(
+    //               // color: isSelected ? Colors.blue[50] : Colors.white,
+    //               color: isSelected ? bgColor.withOpacity(0.1) : Colors.white,
+    //               border: Border.all(
+    //                 // color: isSelected ? Colors.blue : Colors.grey.shade400,
+    //                 color: isSelected ? bgColor : Colors.grey.shade400,
+    //                 width: 1.3,
+    //               ),
+    //               borderRadius: BorderRadius.circular(6),
+    //             ),
+    //             child: Column(
+    //               mainAxisAlignment: MainAxisAlignment.center,
+    //               children: [
+    //                 // ✅ Title auto-adjust + no overflow
+    //                 Flexible(
+    //                   child: Text(
+    //                     pack["name"] ?? "",
+    //                     textAlign: TextAlign.center,
+    //                     maxLines: 3,
+    //                     overflow: TextOverflow.ellipsis,
+    //                     style: const TextStyle(
+    //                       fontWeight: FontWeight.bold,
+    //                       fontSize: 14,
+    //                       // height: 1.2,
+    //                       height:1.5,
+    //                     ),
+    //                   ),
+    //                 ),
+    //
+    //                 const SizedBox(height: 4),
+    //                 const Divider(height: 6, thickness: 0.8),
+    //
+    //                 // ✅ Price section (never overflows)
+    //                 FittedBox(
+    //                   child: Text(
+    //                     "৳${pack["price"] ?? ""}",
+    //                     style: TextStyle(
+    //                       fontWeight: FontWeight.w600,
+    //                       fontSize: 14,
+    //                       // color: Colors.lightBlueAccent[700],
+    //                       color:bgColor,
+    //                     ),
+    //                   ),
+    //                 ),
+    //               ],
+    //             ),
+    //           ),
+    //         );
+    //       },
+    //     );
+    //   },
+    // );
+
+    ///////////////////
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        // ছোট স্ক্রিন হলে childAspectRatio কমিয়ে দিচ্ছি
-        double aspectRatio = constraints.maxWidth < 360 ? 1.6 : 2.0;
+        double aspectRatio;
+
+        if (constraints.maxWidth < 360) {
+          aspectRatio = 2.5; // small screen → even more compact
+        } else if (constraints.maxWidth < 480) {
+          aspectRatio = 1.9;
+        } else {
+          aspectRatio = 1.6; // default for larger screens
+        }
 
         return GridView.builder(
           itemCount: rechargePacks.length,
@@ -875,8 +971,8 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
             childAspectRatio: aspectRatio,
           ),
           itemBuilder: (context, index) {
@@ -896,46 +992,40 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  // color: isSelected ? Colors.blue[50] : Colors.white,
                   color: isSelected ? bgColor.withOpacity(0.1) : Colors.white,
                   border: Border.all(
-                    // color: isSelected ? Colors.blue : Colors.grey.shade400,
                     color: isSelected ? bgColor : Colors.grey.shade400,
-                    width: 1.3,
+                    width: 1.1,
                   ),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // ✅ Title auto-adjust + no overflow
                     Flexible(
                       child: Text(
                         pack["name"] ?? "",
                         textAlign: TextAlign.center,
-                        maxLines: 3,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          // height: 1.2,
-                          height:1.5,
+                          fontSize: 13,
+                          height: 1.3,
                         ),
                       ),
                     ),
 
                     const SizedBox(height: 4),
-                    const Divider(height: 6, thickness: 0.8),
+                    const Divider(height: 4, thickness: 0.7),
 
-                    // ✅ Price section (never overflows)
                     FittedBox(
                       child: Text(
                         "৳${pack["price"] ?? ""}",
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
-                          // color: Colors.lightBlueAccent[700],
-                          color:bgColor,
+                          color: bgColor,
                         ),
                       ),
                     ),
@@ -947,6 +1037,8 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
         );
       },
     );
+
+
   }
 
 
@@ -1260,8 +1352,37 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                 children: [
                   Expanded(
                     child: paymentOption(
-                      "RRR Bazar Wallet",
-                      "assets/wallet.png",
+                      // "RRR Bazar Wallet",
+                      // "assets/wallet.png",
+                      ///////////////////////
+
+                      // "ZS Shop Wallet",
+                      // "assets/walletimage/zs_wallet.png",
+
+                      ///////////////////////////////////
+
+                      // "BDGBazar Wallet",
+                      // "assets/walletimage/bd_wallet.png",
+
+                      ///////////////////////////////////
+
+                      // "Cobratop.. wallet",
+                      // "assets/walletimage/cobra_wallet.png",
+
+                      ///////////////////////////////////
+
+                      // "Pipo Ba.. wallet",
+                      // "assets/walletimage/pipo_wallet.png",
+
+                      ///////////////////////////////////
+                      // "Evo Topup wallet",
+                      // "assets/walletimage/evo_wallet.png",
+
+                      ///////////////////////////////////
+                      "Rangvo wallet",
+                      "assets/walletimage/rangvo_wallet.png",
+
+
                     ),
                   ),
                   Expanded(

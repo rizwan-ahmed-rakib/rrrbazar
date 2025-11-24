@@ -82,7 +82,14 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final color = const Color(0xFF009FE7);
+    // final color = const Color(0xFF009FE7); //rrbazar color
+    // final color = const Color(0xFF5E0000); //zs shop bd color
+    // final color = const Color(0xFFFF1C1C); //bd gamebazar color  #FF1C1C
+    // final color = const Color(0xFFDF232B);   // cobra topup color  #FF1C1C
+    // final color = const Color(0xFF3E8A49);    // pipo bazar color  #FF1C1C
+    // final color = const Color(0xFF9C0000);    // evo topup color  #9C0000
+    final color = const Color(0xFFFF3B68);    // rangvo topup color  #FF3B68
+
 
     return Scaffold(
       backgroundColor: color,
@@ -95,11 +102,15 @@ class _SplashScreenState extends State<SplashScreen>
               child: Container(
                 width: 300,
                 height: 300,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
+                decoration: BoxDecoration(
+                  // color: Colors.white,
+                  color:color,
                   shape: BoxShape.circle,
                 ),
-                child: const Image(image: AssetImage('assets/logo_2.png')),
+                // child: const Image(image: AssetImage('assets/appicon/zs.png')),
+                // child: const Image(image: AssetImage('assets/appicon/pipo.png')),
+                // child: const Image(image: AssetImage('assets/appicon/evo.png')),
+                child: const Image(image: AssetImage('assets/appicon/rangvo.png')),
 
                 // child: Padding(
                 //   padding: const EdgeInsets.all(24),
@@ -129,7 +140,12 @@ class _SplashScreenState extends State<SplashScreen>
             ),
             const SizedBox(height: 20),
             const Text(
-              'RRR Bazar',
+              // 'ZS Shop BD',
+              // 'BD Game Bazar',
+              // 'Cobra Topups',
+              // 'Pipo Bazar',
+              // 'Evo Topup',
+              'Rangvo Topup',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 22,

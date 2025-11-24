@@ -337,14 +337,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "BD Game Shop",
+                      // "BD Game Shop",
+                      "New Game Top-Up",
                       style: TextStyle(
                         fontSize:
                         MediaQuery.of(context).size.width > 600
                             ? 24
                             : 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade800,
+                        // color: Colors.blue.shade800,
+                        color: Colors.black,
                       ),
                     ),
                     if (MediaQuery.of(context).size.width > 600)

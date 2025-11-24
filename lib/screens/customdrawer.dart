@@ -52,13 +52,13 @@ class CustomDrawer extends StatelessWidget {
 
   final List<Map<String, dynamic>> menuItems = const [
     {"icon": Icons.account_balance_wallet_outlined, "text": "Top up", "route": "/topup"},
-    {"icon": Icons.store_mall_directory, "text": "Shop", "route": "/allProductsPage"},
+    // {"icon": Icons.store_mall_directory, "text": "Shop", "route": "/allProductsPage"},
     {"divider": true},
     {"icon": Icons.person_outline, "text": "My Profile", "route": "/userProfilePage"},
     {"icon": Icons.account_balance_wallet, "text": "Add Money", "route": "/addMoneyPage"},
     {"icon": Icons.shopping_bag_outlined, "text": "My Order", "route": "/myOrdersPage"},
     {"icon": Icons.swap_horiz_outlined, "text": "My Transaction", "route": "/myTransactionsPage"},
-    {"icon": Icons.store, "text": "My Shop", "route": "/ordersuggestion"},
+    // {"icon": Icons.store, "text": "My Shop", "route": "/ordersuggestion"},
     {"icon": Icons.contact_support_outlined, "text": "Contact Us", "route": "/contact"},
     {"icon": Icons.logout_rounded, "text": "logout", "route": "/login"},
     {"divider": true},
