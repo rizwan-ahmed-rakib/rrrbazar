@@ -1,9 +1,11 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../provider/shared_local_storage.dart';
 import '../provider/user_profile_provider.dart';
 import 'payment_webview.dart';
 import '../provider/base_url.dart';
@@ -347,8 +349,7 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
                                       const String purpose = "addwallet";
 
                                       // ✅ Token নিতে হবে (ধরা যাক SharedPreferences এ সংরক্ষিত)
-                                      final prefs = await SharedPreferences.getInstance();
-                                      final token = prefs.getString('auth_token');
+                                      final token = await getTokenFromLocalStorage();
 
                                       if (token == null) {
                                         ScaffoldMessenger.of(context).showSnackBar(

@@ -83,12 +83,12 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     // final color = const Color(0xFF009FE7); //rrbazar color
-    // final color = const Color(0xFF5E0000); //zs shop bd color
+    final color = const Color(0xFF5E0000); //zs shop bd color
     // final color = const Color(0xFFFF1C1C); //bd gamebazar color  #FF1C1C
     // final color = const Color(0xFFDF232B);   // cobra topup color  #FF1C1C
     // final color = const Color(0xFF3E8A49);    // pipo bazar color  #FF1C1C
     // final color = const Color(0xFF9C0000);    // evo topup color  #9C0000
-    final color = const Color(0xFFFF3B68);    // rangvo topup color  #FF3B68
+    // final color = const Color(0xFFFF3B68);    // rangvo topup color  #FF3B68
 
 
     return Scaffold(
@@ -107,10 +107,12 @@ class _SplashScreenState extends State<SplashScreen>
                   color:color,
                   shape: BoxShape.circle,
                 ),
-                // child: const Image(image: AssetImage('assets/appicon/zs.png')),
+                child: const Image(image: AssetImage('assets/appicon/zs.png')),
                 // child: const Image(image: AssetImage('assets/appicon/pipo.png')),
                 // child: const Image(image: AssetImage('assets/appicon/evo.png')),
-                child: const Image(image: AssetImage('assets/appicon/rangvo.png')),
+                // child: const Image(image: AssetImage('assets/appicon/rangvo.png')),
+                // child: const Image(image: AssetImage('assets/appicon/bd.png')),
+                // child: const Image(image: AssetImage('assets/appicon/cobra.png')),
 
                 // child: Padding(
                 //   padding: const EdgeInsets.all(24),
@@ -140,12 +142,12 @@ class _SplashScreenState extends State<SplashScreen>
             ),
             const SizedBox(height: 20),
             const Text(
-              // 'ZS Shop BD',
+              'ZS Shop BD',
               // 'BD Game Bazar',
               // 'Cobra Topups',
               // 'Pipo Bazar',
               // 'Evo Topup',
-              'Rangvo Topup',
+              // 'Rangvo Topup',
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 22,

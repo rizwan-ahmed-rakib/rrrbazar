@@ -4,6 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_profile_model.dart';
 import 'base_url.dart';
+import 'shared_local_storage.dart';
+import '../app_flavor.dart';
+
 
 class UserProfileProvider extends ChangeNotifier {
   userProfileData? profileData;
@@ -19,8 +22,7 @@ class UserProfileProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      final token = await getTokenFromLocalStorage();
 
       if (token == null) {
         hasError = true;
@@ -46,6 +48,36 @@ class UserProfileProvider extends ChangeNotifier {
         profileData = userProfileData.fromJson(jsonResponse);
         print("✅ প্রোফাইল লোড সফল!");
         print("✅ প্রোফাইল লোড সফল! ${jsonResponse}");
+        try {
+          final prefs = await SharedPreferences.getInstance();
+
+          // 🔥 CORRECTION: jsonResponse থেকে সঠিকভাবে data access করুন
+          if (jsonResponse['data'] != null && jsonResponse['data']['username'] != null) {
+            await prefs.setString('userName_${AppConfig.instance.flavor.name}', jsonResponse['data']['username']);
+            print("✅ SharedPreferences-এ userName সেভ করা হয়েছে: ${jsonResponse['data']['username']}");
+          }
+
+          if (jsonResponse['data'] != null && jsonResponse['data']['avatar'] != null) {
+            await prefs.setString('userPhoto_${AppConfig.instance.flavor.name}', jsonResponse['data']['avatar']);
+            print("✅ SharedPreferences-এ userPhoto সেভ করা হয়েছে: ${jsonResponse['data']['avatar']}");
+          }
+
+          // 🔥 Alternative: profileData object ব্যবহার করে (better approach)
+          if (profileData?.data?.username != null) {
+            await prefs.setString('userName_${AppConfig.instance.flavor.name}', profileData!.data!.username!);
+            print("✅ SharedPreferences-এ userName সেভ করা হয়েছে: ${profileData!.data!.username!}");
+          }
+
+          if (profileData?.data?.avatar != null) {
+            await prefs.setString('userPhoto_${AppConfig.instance.flavor.name}', profileData!.data!.avatar!);
+            print("✅ SharedPreferences-এ userPhoto সেভ করা হয়েছে: ${profileData!.data!.avatar!}");
+          }
+
+          print("🎉 SharedPreferences-এ সব ডেটা সফলভাবে সেভ করা হয়েছে!");
+
+        } catch (e) {
+          print("❌ SharedPreferences-এ সেভ করতে সমস্যা: $e");
+        }
       } else {
         hasError = true;
         print("❌ সার্ভার ত্রুটি: ${response.statusCode}");

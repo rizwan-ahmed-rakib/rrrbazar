@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../app_flavor.dart';
 
 class UserProvider extends ChangeNotifier {
   String? name;
@@ -8,7 +9,10 @@ class UserProvider extends ChangeNotifier {
 
   bool get isLoggedIn => name != null;
 
-  /// ✅ ইউজার লগইন হলে সেট করো
+  String _getUserNameKey() => 'userName_${AppConfig.instance.flavor.name}';
+  String _getUserEmailKey() => 'userEmail_${AppConfig.instance.flavor.name}';
+  String _getUserPhotoKey() => 'userPhoto_${AppConfig.instance.flavor.name}';
+
   void setUser(String n, String e, String p) {
     name = n;
     email = e;
@@ -17,37 +21,38 @@ class UserProvider extends ChangeNotifier {
     _saveToPrefs();
   }
 
-  /// ✅ লগআউট করলে মুছে ফেলো
-  Future<void> logout() async {
+  void clearUser() {
     name = null;
     email = null;
     photoUrl = null;
     notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
   }
 
-  /// ✅ SharedPreferences থেকে ইউজার রিস্টোর করো
+  Future<void> logout() async {
+    clearUser();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_getUserNameKey());
+    await prefs.remove(_getUserEmailKey());
+    await prefs.remove(_getUserPhotoKey());
+  }
+
   Future<void> loadUserFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    name = prefs.getString('userName');
-    email = prefs.getString('userEmail');
-    photoUrl = prefs.getString('userPhoto');
+    name = prefs.getString(_getUserNameKey());
+    email = prefs.getString(_getUserEmailKey());
+    photoUrl = prefs.getString(_getUserPhotoKey());
     notifyListeners();
   }
 
-  /// ✅ SharedPreferences এ ইউজার সেভ করো
-  /// ✅ SharedPreferences এ ইউজার সেভ করো
   Future<void> _saveToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('userName', name ?? '');
-    await prefs.setString('userEmail', email ?? '');
-    await prefs.setString('userPhoto', photoUrl ?? '');
+    await prefs.setString(_getUserNameKey(), name ?? '');
+    await prefs.setString(_getUserEmailKey(), email ?? '');
+    await prefs.setString(_getUserPhotoKey(), photoUrl ?? '');
 
-    // সেভ করার পর প্রিন্ট করে দেখা
-    String savedName = prefs.getString('userName') ?? 'No Name';
-    String savedEmail = prefs.getString('userEmail') ?? 'No Email';
-    String savedPhoto = prefs.getString('userPhoto') ?? 'No Photo';
+    String savedName = prefs.getString(_getUserNameKey()) ?? 'No Name';
+    String savedEmail = prefs.getString(_getUserEmailKey()) ?? 'No Email';
+    String savedPhoto = prefs.getString(_getUserPhotoKey()) ?? 'No Photo';
 
     print('✅ Saved in local shared preferences after authentication ✅  ');
     print('Saved User Name: $savedName');

@@ -1,11 +1,13 @@
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/physics.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../app_flavor.dart';
 import '../provider/base_url.dart' show backendUrl;
+import '../provider/shared_local_storage.dart';
 import '../provider/site_provider.dart';
 import '../provider/user_profile_provider.dart';
 import '../provider/user_provider.dart';
@@ -42,6 +44,9 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
   String selectedPayment = "RRR Bazar Wallet";
   int? selectedPackIndex;
   double? selectedPackagePrice; // nullable কারণ শুরুতে কিছু সিলেক্ট থাকে না
+  final walletName = AppConfig.instance.walletName;
+  // final walletName = AppConfig.instance.walletName;
+
 
   var selectedPackageName;
 
@@ -485,8 +490,7 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
 
 
   Future<void> _confirmOrder() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
+    final token = await getTokenFromLocalStorage();
 
     final profileProvider = Provider.of<UserProfileProvider>(
       context,
@@ -732,11 +736,31 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
 
   ////////////////////////////////////////////////////////////////////
 
-  // --- Payment Option Widget ---
+  // --- Payment Option Widget  ---
+  // ✅  Universal Image Loader (asset + network)
+  Widget loadImage(String path, {double size = 45}) {
+    if (path.startsWith("http")) {
+      return Image.network(
+        path,
+        height: size,
+        errorBuilder: (c, e, s) => const Icon(Icons.image_not_supported),
+      );
+    }
+    else {
+      return Image.asset(
+        path,
+        height: size,
+        errorBuilder: (c, e, s) => const Icon(Icons.broken_image),
+      );
+    }
+  }
+
 
   Widget paymentOption(String name, String imagePath) {
     final siteProvider = Provider.of<SiteProvider>(context);
     final site = siteProvider.siteData;
+    bool isNetwork = imagePath.startsWith("http");
+
 
 
     // 🔹 Dynamic background color
@@ -778,10 +802,24 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             // 🔹 উপরের Image অংশ (সাদা থাকবে সবসময়)
+
+            // Padding(
+            //   padding: const EdgeInsets.all(10),
+            //   // child: Image.asset(imagePath, height: 45),
+            //   // child: Image.network(imagePath, height: 45),
+            //
+            //   child: loadImage(imagePath, size: 45), // 🔥 auto asset/network
+            //
+            //
+            // ),
+
             Padding(
               padding: const EdgeInsets.all(10),
-              child: Image.asset(imagePath, height: 45),
+              child: isNetwork
+                  ? Image.network(imagePath, height: 45)
+                  : Image.asset(imagePath, height: 45),
             ),
+
 
             // 🔹 নিচের টেক্সট অংশ (সিলেক্ট করলে রঙ বদলাবে)
             Container(
@@ -842,6 +880,9 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
               ),
             ),
           ],
+
+
+
         ),
       ),
     );
@@ -864,105 +905,18 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
     try {
       bgColor = Color(int.parse("0xff${site?.color}"));
     } catch (_) {}
-    //////////////////////
 
-    // return LayoutBuilder(
-    //   builder: (context, constraints) {
-    //     // ছোট স্ক্রিন হলে childAspectRatio কমিয়ে দিচ্ছি
-    //     double aspectRatio = constraints.maxWidth < 360 ? 1.6 : 2.0;
-    //     // double aspectRatio = constraints.maxWidth < 360 ? 1.5 : 2.0;
-    //
-    //     return GridView.builder(
-    //       itemCount: rechargePacks.length,
-    //       shrinkWrap: true,
-    //       physics: const NeverScrollableScrollPhysics(),
-    //       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-    //         crossAxisCount: 2,
-    //         crossAxisSpacing: 10,
-    //         mainAxisSpacing: 10,
-    //         childAspectRatio: aspectRatio,
-    //       ),
-    //       itemBuilder: (context, index) {
-    //         bool isSelected = selectedPackIndex == index;
-    //         final pack = rechargePacks[index];
-    //
-    //         return GestureDetector(
-    //           onTap: () {
-    //             setState(() {
-    //               selectedPackIndex = index;
-    //               selectedPackagePrice = _convertToDouble(pack["price"]);
-    //               selectedPackageName = pack["name"];
-    //               selectedPackageId = pack["id"];
-    //             });
-    //           },
-    //           child: AnimatedContainer(
-    //             duration: const Duration(milliseconds: 200),
-    //             padding: const EdgeInsets.all(6),
-    //             decoration: BoxDecoration(
-    //               // color: isSelected ? Colors.blue[50] : Colors.white,
-    //               color: isSelected ? bgColor.withOpacity(0.1) : Colors.white,
-    //               border: Border.all(
-    //                 // color: isSelected ? Colors.blue : Colors.grey.shade400,
-    //                 color: isSelected ? bgColor : Colors.grey.shade400,
-    //                 width: 1.3,
-    //               ),
-    //               borderRadius: BorderRadius.circular(6),
-    //             ),
-    //             child: Column(
-    //               mainAxisAlignment: MainAxisAlignment.center,
-    //               children: [
-    //                 // ✅ Title auto-adjust + no overflow
-    //                 Flexible(
-    //                   child: Text(
-    //                     pack["name"] ?? "",
-    //                     textAlign: TextAlign.center,
-    //                     maxLines: 3,
-    //                     overflow: TextOverflow.ellipsis,
-    //                     style: const TextStyle(
-    //                       fontWeight: FontWeight.bold,
-    //                       fontSize: 14,
-    //                       // height: 1.2,
-    //                       height:1.5,
-    //                     ),
-    //                   ),
-    //                 ),
-    //
-    //                 const SizedBox(height: 4),
-    //                 const Divider(height: 6, thickness: 0.8),
-    //
-    //                 // ✅ Price section (never overflows)
-    //                 FittedBox(
-    //                   child: Text(
-    //                     "৳${pack["price"] ?? ""}",
-    //                     style: TextStyle(
-    //                       fontWeight: FontWeight.w600,
-    //                       fontSize: 14,
-    //                       // color: Colors.lightBlueAccent[700],
-    //                       color:bgColor,
-    //                     ),
-    //                   ),
-    //                 ),
-    //               ],
-    //             ),
-    //           ),
-    //         );
-    //       },
-    //     );
-    //   },
-    // );
-
-    ///////////////////
 
     return LayoutBuilder(
       builder: (context, constraints) {
         double aspectRatio;
 
         if (constraints.maxWidth < 360) {
-          aspectRatio = 2.5; // small screen → even more compact
+          aspectRatio = 2.9; // আরও ছোট
         } else if (constraints.maxWidth < 480) {
-          aspectRatio = 1.9;
+          aspectRatio = 1.25;
         } else {
-          aspectRatio = 1.6; // default for larger screens
+          aspectRatio = 1.45;
         }
 
         return GridView.builder(
@@ -989,7 +943,7 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                 });
               },
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+                duration: const Duration(milliseconds: 180),
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
                   color: isSelected ? bgColor.withOpacity(0.1) : Colors.white,
@@ -1000,32 +954,37 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Flexible(
+                    // 🔵 Title gets more space (expanded)
+                    Expanded(
+                      flex: 4,
                       child: Text(
                         pack["name"] ?? "",
                         textAlign: TextAlign.center,
-                        maxLines: 2,
+                        maxLines: 3,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12.5,
                           height: 1.3,
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 4),
-                    const Divider(height: 4, thickness: 0.7),
+                    const Divider(height: 6, thickness: 0.6),
 
-                    FittedBox(
-                      child: Text(
-                        "৳${pack["price"] ?? ""}",
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          color: bgColor,
+                    // 🟢 Price gets very small area (compact)
+                    Expanded(
+                      flex: 2,
+                      child: FittedBox(
+                        child: Text(
+                          "৳${pack["price"] ?? ""}",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            height: 1,
+                            color: bgColor,
+                          ),
                         ),
                       ),
                     ),
@@ -1038,6 +997,8 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
       },
     );
 
+
+    ///////////////////////////////////
 
   }
 
@@ -1061,8 +1022,7 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
     final logoUrl = "$backendUrl/images/${site?.logo}";
     final userProvider = Provider.of<UserProvider>(context);
     final profileProvider = Provider.of<UserProfileProvider>(context);
-    final profile =
-        profileProvider.profileData?.data; // ✅ Dynamic wallet balance
+    final profile = profileProvider.profileData?.data; // ✅ Dynamic wallet balance
     final double walletBalance = _convertToDouble(profile?.wallet);
     print("*********dynamic wallet balance= ${walletBalance}***********");
 
@@ -1115,366 +1075,795 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
 
           setState(() {}); // UI refresh
         },
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(), // very important!
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ⚠️ যদি user লগইন না করে থাকে তাহলে warning box দেখাও
-              if (!isLoggedIn)
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.amber[100],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange),
-                  ),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.warning, color: Colors.orange, size: 30),
-                      const SizedBox(width: 10),
-                      const Expanded(
-                        child: Text(
-                          "You must be logged in to order. Please login first.",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const LoginScreen(),
+
+
+
+        // child: SingleChildScrollView(
+        //   physics: const AlwaysScrollableScrollPhysics(),
+        //
+        //   child: Column(
+        //     crossAxisAlignment: CrossAxisAlignment.start,
+        //     children: [
+        //
+        //       // 🟦 পুরো content-এ padding দিন
+        //       Padding(
+        //         padding: const EdgeInsets.all(16),
+        //         child: Column(
+        //           crossAxisAlignment: CrossAxisAlignment.start,
+        //           // children: [
+        //           //   /// 🔹 আপনার পুরো content (warning, grid, form, buttons etc.)
+        //           //   /// এগুলো এখানেই থাকবে
+        //           // ],
+        //
+        //
+        //           children: [
+        //             // ⚠️ যদি user লগইন না করে থাকে তাহলে warning box দেখাও
+        //             if (!isLoggedIn)
+        //               Container(
+        //                 padding: const EdgeInsets.all(12),
+        //                 margin: const EdgeInsets.only(bottom: 20),
+        //                 decoration: BoxDecoration(
+        //                   color: Colors.amber[100],
+        //                   borderRadius: BorderRadius.circular(8),
+        //                   border: Border.all(color: Colors.orange),
+        //                 ),
+        //                 child: Row(
+        //                   crossAxisAlignment: CrossAxisAlignment.center,
+        //                   children: [
+        //                     const Icon(Icons.warning, color: Colors.orange, size: 30),
+        //                     const SizedBox(width: 10),
+        //                     const Expanded(
+        //                       child: Text(
+        //                         "You must be logged in to order. Please login first.",
+        //                         style: TextStyle(
+        //                           fontWeight: FontWeight.w500,
+        //                           color: Colors.black87,
+        //                         ),
+        //                       ),
+        //                     ),
+        //                     TextButton(
+        //                       onPressed: () {
+        //                         Navigator.push(
+        //                           context,
+        //                           MaterialPageRoute(
+        //                             builder: (_) => const LoginScreen(),
+        //                           ),
+        //                         );
+        //                       },
+        //                       style: TextButton.styleFrom(
+        //                         // backgroundColor: Colors.blue,
+        //                         backgroundColor: bgColor,
+        //                         foregroundColor: Colors.white,
+        //                         padding: const EdgeInsets.symmetric(
+        //                           horizontal: 16,
+        //                           vertical: 8,
+        //                         ),
+        //                       ),
+        //                       child: const Text("Login"),
+        //                     ),
+        //                   ],
+        //                 ),
+        //               ),
+        //
+        //             // ✅ Wallet Warning শুধু লগইনকৃত ইউজারদের জন্য
+        //             if (isLoggedIn && walletBalance <= 0)
+        //               Container(
+        //                 padding: const EdgeInsets.all(10),
+        //                 margin: const EdgeInsets.only(bottom: 20),
+        //                 decoration: BoxDecoration(
+        //                   color: Colors.amber[100],
+        //                   borderRadius: BorderRadius.circular(8),
+        //                   border: Border.all(color: Colors.amber),
+        //                 ),
+        //                 child: Row(
+        //                   children: [
+        //                     const Icon(Icons.warning, color: Colors.orange),
+        //                     const SizedBox(width: 8),
+        //                     const Expanded(
+        //                       child: Text(
+        //                         "Wallet balance নেই। প্রথমে Add Money করুন।",
+        //                         style: TextStyle(color: Colors.black87),
+        //                       ),
+        //                     ),
+        //                     TextButton(
+        //                       onPressed: () {
+        //                         Navigator.push(
+        //                           context,
+        //                           MaterialPageRoute(builder: (_) => AddMoneyPage()),
+        //                         );
+        //                       },
+        //                       // child: const Text("Add Money"),
+        //                       // child: const Text("Add Money",style: TextStyle(color: Colors.black87),),
+        //                       child: Text("Add Money",style: TextStyle(color:bgColor),),
+        //                     ),
+        //                   ],
+        //                 ),
+        //               ),
+        //
+        //             Center(child: Image.network(widget.image, width: 100)),
+        //             const SizedBox(height: 10),
+        //             Center(
+        //               child: Text(
+        //                 widget.title,
+        //                 style: const TextStyle(
+        //                   fontSize: 20,
+        //                   fontWeight: FontWeight.bold,
+        //                 ),
+        //               ),
+        //             ),
+        //
+        //             const SizedBox(height: 20),
+        //
+        //             Container(
+        //               decoration: BoxDecoration(
+        //                 // color: Colors.lightBlueAccent,
+        //                 color: bgColor,
+        //                 borderRadius: BorderRadius.circular(8),
+        //               ),
+        //               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        //               child: Row(
+        //                 children: [
+        //                   CircleAvatar(
+        //                     radius: 14,
+        //                     backgroundColor: Colors.transparent,
+        //                     child: Container(
+        //                       decoration: BoxDecoration(
+        //                         shape: BoxShape.circle,
+        //                         border: Border.all(color: Colors.white, width: 2),
+        //                       ),
+        //                       alignment: Alignment.center,
+        //                       child: Text(
+        //                         "1",
+        //                         style: TextStyle(
+        //                             color: Colors.white,
+        //                             fontWeight: FontWeight.bold),
+        //                       ),
+        //                     ),
+        //                   ),
+        //                   SizedBox(width: 10),
+        //                   Text(
+        //                     "Account Info",
+        //                     style: TextStyle(
+        //                         color: Colors.white,
+        //                         fontSize: 16,
+        //                         fontWeight: FontWeight.bold),
+        //                   ),
+        //                   Spacer(),
+        //                 ],
+        //               ),
+        //             ),
+        //
+        //             SizedBox(height: 12),
+        //
+        //
+        //
+        //             TextField(
+        //               controller: playerIdController,
+        //               decoration: InputDecoration(
+        //                 labelText: "Enter Player ID",
+        //                 border: OutlineInputBorder(
+        //                   borderRadius: BorderRadius.circular(10),
+        //                 ),
+        //               ),
+        //               enabled: isLoggedIn, // ❌ লগইন না থাকলে টাইপ করা যাবে না
+        //             ),
+        //
+        //             const SizedBox(height: 20),
+        //
+        //             //////////////////recharge pack ////////////////
+        //
+        //             // const Text(
+        //             //   "Select Recharge Pack",
+        //             //   style: TextStyle(fontWeight: FontWeight.bold),
+        //             // ),
+        //
+        //             Container(
+        //               decoration: BoxDecoration(
+        //                 // color: Colors.lightBlueAccent,
+        //                 color: bgColor,
+        //                 borderRadius: BorderRadius.circular(8),
+        //               ),
+        //               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        //               child: Row(
+        //                 children: [
+        //                   CircleAvatar(
+        //                     radius: 14,
+        //                     backgroundColor: Colors.transparent,
+        //                     child: Container(
+        //                       decoration: BoxDecoration(
+        //                         shape: BoxShape.circle,
+        //                         border: Border.all(color: Colors.white, width: 2),
+        //                       ),
+        //                       alignment: Alignment.center,
+        //                       child: Text(
+        //                         "2",
+        //                         style: TextStyle(
+        //                             color: Colors.white,
+        //                             fontWeight: FontWeight.bold),
+        //                       ),
+        //                     ),
+        //                   ),
+        //                   SizedBox(width: 10),
+        //                   Text(
+        //                     "Select Recharge Pack",
+        //                     style: TextStyle(
+        //                         color: Colors.white,
+        //                         fontSize: 16,
+        //                         fontWeight: FontWeight.bold),
+        //                   ),
+        //                   Spacer(),
+        //                 ],
+        //               ),
+        //             ),
+        //
+        //             SizedBox(height: 12),
+        //
+        //
+        //
+        //
+        //             buildRechargeGrid(),
+        //
+        //             /////////////////////////////////////////////////////
+        //
+        //             const SizedBox(height: 20),
+        //
+        //             //////////////////////// payment part/////////////
+        //
+        //             const Text(
+        //               "Select Payment Method",
+        //               style: TextStyle(fontWeight: FontWeight.bold),
+        //             ),
+        //             const SizedBox(height: 10),
+        //
+        //
+        //             // Row(
+        //             //   mainAxisAlignment: MainAxisAlignment.center,
+        //             //   children: [
+        //             //     paymentOption("RRR Bazar Wallet", "assets/wallet.png"),
+        //             //     paymentOption("Auto Payment", "assets/auto_payment.jpeg"),
+        //             //   ],
+        //
+        //             // ),
+        //
+        //             Row(
+        //               children: [
+        //                 Expanded(
+        //                   child:
+        //                   paymentOption(
+        //                     // "RRR Bazar Wallet",
+        //                     // "assets/wallet.png",
+        //                     ///////////////////////
+        //
+        //                     // "ZS Shop Wallet",
+        //                     // "assets/walletimage/zs_wallet.png",
+        //
+        //                     ///////////////////////////////////
+        //
+        //                     // "BDGBazar Wallet",
+        //                     // "assets/walletimage/bd_wallet.png",
+        //
+        //                     ///////////////////////////////////
+        //
+        //                     // "Cobratop.. wallet",
+        //                     // "assets/walletimage/cobra_wallet.png",
+        //
+        //                     ///////////////////////////////////
+        //
+        //                     // "Pipo Ba.. wallet",
+        //                     // "assets/walletimage/pipo_wallet.png",
+        //
+        //                     ///////////////////////////////////
+        //                     // "Evo Topup wallet",
+        //                     // "assets/walletimage/evo_wallet.png",
+        //
+        //                     ///////////////////////////////////
+        //                     // "Rangvo wallet",
+        //                     // "assets/walletimage/rangvo_wallet.png",
+        //
+        //                     walletName,
+        //                     logoUrl,
+        //
+        //                   ),
+        //                 ),
+        //                 Expanded(
+        //                   child: paymentOption(
+        //                     "Auto Payment",
+        //                     "assets/auto_payment.jpeg",
+        //                   ),
+        //                 ),
+        //               ],
+        //             ),
+        //
+        //             //////////////////////////////////////////////
+        //             const SizedBox(height: 30),
+        //
+        //             Row(
+        //               children: [
+        //                 // ✅ শুধুমাত্র লগইনকৃত ইউজার হলে Add Money দেখাও
+        //                 if (isLoggedIn && selectedPayment == "RRR Bazar Wallet")
+        //                   Expanded(
+        //                     child: ElevatedButton.icon(
+        //                       onPressed: () {
+        //                         Navigator.push(
+        //                           context,
+        //                           MaterialPageRoute(builder: (_) => AddMoneyPage()),
+        //                         );
+        //                       },
+        //                       // icon: const Icon(Icons.add, color: Colors.blue),
+        //                       icon: Icon(Icons.add, color: bgColor),
+        //                       label: Text(
+        //                         "Add Money",
+        //                         style: TextStyle(
+        //                           // color: Colors.blue,
+        //                           color: bgColor,
+        //                           fontWeight: FontWeight.w600,
+        //                         ),
+        //                       ),
+        //                       style: ElevatedButton.styleFrom(
+        //                         minimumSize: const Size(double.infinity, 50),
+        //                         backgroundColor: Colors.white,
+        //                         side: BorderSide(
+        //                           // color: Colors.blue,
+        //                           color: bgColor,
+        //                           width: 1.5,
+        //                         ),
+        //                         shape: RoundedRectangleBorder(
+        //                           borderRadius: BorderRadius.circular(8),
+        //                         ),
+        //                         elevation: 0,
+        //                       ),
+        //                     ),
+        //                   ),
+        //
+        //                 const SizedBox(width: 10),
+        //
+        //                 // ✅ Buy Now Button (disabled if not logged in)
+        //                 Expanded(
+        //                   child: Opacity(
+        //                     opacity: canBuy ? 1 : 0.5,
+        //                     child: ElevatedButton(
+        //                       style: ElevatedButton.styleFrom(
+        //                         minimumSize: const Size(double.infinity, 50),
+        //                         backgroundColor:
+        //                         // canBuy ? Colors.blue : Colors.grey[400],
+        //                         canBuy ? bgColor : Colors.grey[400],
+        //                         side: BorderSide(
+        //                           // color: canBuy ? Colors.blueAccent : Colors.grey,
+        //                           color: canBuy ? bgColor : Colors.grey,
+        //                           width: 1.2,
+        //                         ),
+        //                         shape: RoundedRectangleBorder(
+        //                           borderRadius: BorderRadius.circular(8),
+        //                         ),
+        //                         elevation: canBuy ? 2 : 0,
+        //                       ),
+        //                       onPressed: canBuy ? _confirmOrder : null,
+        //                       child: const Text(
+        //                         "Buy Now",
+        //                         style: TextStyle(fontSize: 18, color: Colors.white),
+        //                       ),
+        //                     ),
+        //                   ),
+        //                 ),
+        //               ],
+        //             ),
+        //
+        //             const SizedBox(height: 30),
+        //             // CustomFooter(),
+        //           ],
+        //
+        //
+        //
+        //         ),
+        //       ),
+        //
+        //       // 🟥 Footer Outside Padding
+        //       CustomFooter(), // এখানে আর padding লাগবে না
+        //     ],
+        //   ),
+        //
+        // ),
+
+
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    // 🟦 All main content with padding
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        // children: [
+                        //   // 👉 আপনার সমস্ত content এখানেই থাকবে
+                        //   // warning, grid, buttons, form etc.
+                        // ],
+
+
+                        children: [
+                          // ⚠️ যদি user লগইন না করে থাকে তাহলে warning box দেখাও
+                          if (!isLoggedIn)
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              margin: const EdgeInsets.only(bottom: 20),
+                              decoration: BoxDecoration(
+                                color: Colors.amber[100],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.orange),
+                              ),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.warning, color: Colors.orange, size: 30),
+                                  const SizedBox(width: 10),
+                                  const Expanded(
+                                    child: Text(
+                                      "You must be logged in to order. Please login first.",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const LoginScreen(),
+                                        ),
+                                      );
+                                    },
+                                    style: TextButton.styleFrom(
+                                      // backgroundColor: Colors.blue,
+                                      backgroundColor: bgColor,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                    ),
+                                    child: const Text("Login"),
+                                  ),
+                                ],
+                              ),
                             ),
-                          );
-                        },
-                        style: TextButton.styleFrom(
-                          // backgroundColor: Colors.blue,
-                          backgroundColor: bgColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
+
+                          // ✅ Wallet Warning শুধু লগইনকৃত ইউজারদের জন্য
+                          if (isLoggedIn && walletBalance <= 0)
+                            Container(
+                              padding: const EdgeInsets.all(10),
+                              margin: const EdgeInsets.only(bottom: 20),
+                              decoration: BoxDecoration(
+                                color: Colors.amber[100],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.amber),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.warning, color: Colors.orange),
+                                  const SizedBox(width: 8),
+                                  const Expanded(
+                                    child: Text(
+                                      "Wallet balance নেই। প্রথমে Add Money করুন।",
+                                      style: TextStyle(color: Colors.black87),
+                                    ),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => AddMoneyPage()),
+                                      );
+                                    },
+                                    // child: const Text("Add Money"),
+                                    // child: const Text("Add Money",style: TextStyle(color: Colors.black87),),
+                                    child: Text("Add Money",style: TextStyle(color:bgColor),),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          Center(child: Image.network(widget.image, width: 100)),
+                          const SizedBox(height: 10),
+                          Center(
+                            child: Text(
+                              widget.title,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
-                        ),
-                        child: const Text("Login"),
-                      ),
-                    ],
-                  ),
-                ),
 
-              // ✅ Wallet Warning শুধু লগইনকৃত ইউজারদের জন্য
-              if (isLoggedIn && walletBalance <= 0)
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  margin: const EdgeInsets.only(bottom: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.amber[100],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.amber),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.warning, color: Colors.orange),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Text(
-                          "Wallet balance নেই। প্রথমে Add Money করুন।",
-                          style: TextStyle(color: Colors.black87),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => AddMoneyPage()),
-                          );
-                        },
-                        // child: const Text("Add Money"),
-                        // child: const Text("Add Money",style: TextStyle(color: Colors.black87),),
-                        child: Text("Add Money",style: TextStyle(color:bgColor),),
-                      ),
-                    ],
-                  ),
-                ),
+                          const SizedBox(height: 20),
 
-              Center(child: Image.network(widget.image, width: 100)),
-              const SizedBox(height: 10),
-              Center(
-                child: Text(
-                  widget.title,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+                          Container(
+                            decoration: BoxDecoration(
+                              // color: Colors.lightBlueAccent,
+                              color: bgColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 14,
+                                  backgroundColor: Colors.transparent,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 2),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      "1",
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  "Account Info",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Spacer(),
+                              ],
+                            ),
+                          ),
 
-              const SizedBox(height: 20),
+                          SizedBox(height: 12),
 
-              Container(
-                decoration: BoxDecoration(
-                  // color: Colors.lightBlueAccent,
-                  color: bgColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 14,
-                      backgroundColor: Colors.transparent,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          "1",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold),
-                        ),
+
+
+                          TextField(
+                            controller: playerIdController,
+                            decoration: InputDecoration(
+                              labelText: "Enter Player ID",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            enabled: isLoggedIn, // ❌ লগইন না থাকলে টাইপ করা যাবে না
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          //////////////////recharge pack ////////////////
+
+                          // const Text(
+                          //   "Select Recharge Pack",
+                          //   style: TextStyle(fontWeight: FontWeight.bold),
+                          // ),
+
+                          Container(
+                            decoration: BoxDecoration(
+                              // color: Colors.lightBlueAccent,
+                              color: bgColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 14,
+                                  backgroundColor: Colors.transparent,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 2),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      "2",
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Text(
+                                  "Select Recharge Pack",
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Spacer(),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(height: 12),
+
+
+
+
+                          buildRechargeGrid(),
+
+                          /////////////////////////////////////////////////////
+
+                          const SizedBox(height: 20),
+
+                          //////////////////////// payment part/////////////
+
+                          const Text(
+                            "Select Payment Method",
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 10),
+
+
+                          // Row(
+                          //   mainAxisAlignment: MainAxisAlignment.center,
+                          //   children: [
+                          //     paymentOption("RRR Bazar Wallet", "assets/wallet.png"),
+                          //     paymentOption("Auto Payment", "assets/auto_payment.jpeg"),
+                          //   ],
+
+                          // ),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                child:
+                                paymentOption(
+                                  // "RRR Bazar Wallet",
+                                  // "assets/wallet.png",
+                                  ///////////////////////
+
+                                  // "ZS Shop Wallet",
+                                  // "assets/walletimage/zs_wallet.png",
+
+                                  ///////////////////////////////////
+
+                                  // "BDGBazar Wallet",
+                                  // "assets/walletimage/bd_wallet.png",
+
+                                  ///////////////////////////////////
+
+                                  // "Cobratop.. wallet",
+                                  // "assets/walletimage/cobra_wallet.png",
+
+                                  ///////////////////////////////////
+
+                                  // "Pipo Ba.. wallet",
+                                  // "assets/walletimage/pipo_wallet.png",
+
+                                  ///////////////////////////////////
+                                  // "Evo Topup wallet",
+                                  // "assets/walletimage/evo_wallet.png",
+
+                                  ///////////////////////////////////
+                                  // "Rangvo wallet",
+                                  // "assets/walletimage/rangvo_wallet.png",
+
+                                  walletName,
+                                  logoUrl,
+
+                                ),
+                              ),
+                              Expanded(
+                                child: paymentOption(
+                                  "Auto Payment",
+                                  "assets/auto_payment.jpeg",
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          //////////////////////////////////////////////
+                          const SizedBox(height: 30),
+
+                          Row(
+                            children: [
+                              // ✅ শুধুমাত্র লগইনকৃত ইউজার হলে Add Money দেখাও
+                              if (isLoggedIn && selectedPayment == "RRR Bazar Wallet")
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => AddMoneyPage()),
+                                      );
+                                    },
+                                    // icon: const Icon(Icons.add, color: Colors.blue),
+                                    icon: Icon(Icons.add, color: bgColor),
+                                    label: Text(
+                                      "Add Money",
+                                      style: TextStyle(
+                                        // color: Colors.blue,
+                                        color: bgColor,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      minimumSize: const Size(double.infinity, 50),
+                                      backgroundColor: Colors.white,
+                                      side: BorderSide(
+                                        // color: Colors.blue,
+                                        color: bgColor,
+                                        width: 1.5,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      elevation: 0,
+                                    ),
+                                  ),
+                                ),
+
+                              const SizedBox(width: 10),
+
+                              // ✅ Buy Now Button (disabled if not logged in)
+                              Expanded(
+                                child: Opacity(
+                                  opacity: canBuy ? 1 : 0.5,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      minimumSize: const Size(double.infinity, 50),
+                                      backgroundColor:
+                                      // canBuy ? Colors.blue : Colors.grey[400],
+                                      canBuy ? bgColor : Colors.grey[400],
+                                      side: BorderSide(
+                                        // color: canBuy ? Colors.blueAccent : Colors.grey,
+                                        color: canBuy ? bgColor : Colors.grey,
+                                        width: 1.2,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      elevation: canBuy ? 2 : 0,
+                                    ),
+                                    onPressed: canBuy ? _confirmOrder : null,
+                                    child: const Text(
+                                      "Buy Now",
+                                      style: TextStyle(fontSize: 18, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 30),
+                          // CustomFooter(),
+                        ],
+
+
+
                       ),
                     ),
-                    SizedBox(width: 10),
-                    Text(
-                      "Account Info",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    Spacer(),
+
+                    // 🔥 Push footer to bottom even if content is small
+                    const SizedBox(height: 20),  // Footer উপরে উঠে না আসার জন্য
+
+                    // 🟥 Footer without padding
+                    CustomFooter(),
                   ],
                 ),
+
               ),
-
-              SizedBox(height: 12),
-
-
-
-              TextField(
-                controller: playerIdController,
-                decoration: InputDecoration(
-                  labelText: "Enter Player ID",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                enabled: isLoggedIn, // ❌ লগইন না থাকলে টাইপ করা যাবে না
-              ),
-
-              const SizedBox(height: 20),
-
-              //////////////////recharge pack ////////////////
-
-              // const Text(
-              //   "Select Recharge Pack",
-              //   style: TextStyle(fontWeight: FontWeight.bold),
-              // ),
-
-              Container(
-                decoration: BoxDecoration(
-                  // color: Colors.lightBlueAccent,
-                  color: bgColor,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 14,
-                      backgroundColor: Colors.transparent,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          "2",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Text(
-                      "Select Recharge Pack",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold),
-                    ),
-                    Spacer(),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: 12),
-
-
-
-
-              buildRechargeGrid(),
-
-              /////////////////////////////////////////////////////
-
-              const SizedBox(height: 20),
-
-              //////////////////////// payment part/////////////
-
-              const Text(
-                "Select Payment Method",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-
-
-              // Row(
-              //   mainAxisAlignment: MainAxisAlignment.center,
-              //   children: [
-              //     paymentOption("RRR Bazar Wallet", "assets/wallet.png"),
-              //     paymentOption("Auto Payment", "assets/auto_payment.jpeg"),
-              //   ],
-              // ),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: paymentOption(
-                      // "RRR Bazar Wallet",
-                      // "assets/wallet.png",
-                      ///////////////////////
-
-                      // "ZS Shop Wallet",
-                      // "assets/walletimage/zs_wallet.png",
-
-                      ///////////////////////////////////
-
-                      // "BDGBazar Wallet",
-                      // "assets/walletimage/bd_wallet.png",
-
-                      ///////////////////////////////////
-
-                      // "Cobratop.. wallet",
-                      // "assets/walletimage/cobra_wallet.png",
-
-                      ///////////////////////////////////
-
-                      // "Pipo Ba.. wallet",
-                      // "assets/walletimage/pipo_wallet.png",
-
-                      ///////////////////////////////////
-                      // "Evo Topup wallet",
-                      // "assets/walletimage/evo_wallet.png",
-
-                      ///////////////////////////////////
-                      "Rangvo wallet",
-                      "assets/walletimage/rangvo_wallet.png",
-
-
-                    ),
-                  ),
-                  Expanded(
-                    child: paymentOption(
-                      "Auto Payment",
-                      "assets/auto_payment.jpeg",
-                    ),
-                  ),
-                ],
-              ),
-
-              //////////////////////////////////////////////
-              const SizedBox(height: 30),
-
-              Row(
-                children: [
-                  // ✅ শুধুমাত্র লগইনকৃত ইউজার হলে Add Money দেখাও
-                  if (isLoggedIn && selectedPayment == "RRR Bazar Wallet")
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => AddMoneyPage()),
-                          );
-                        },
-                        // icon: const Icon(Icons.add, color: Colors.blue),
-                        icon: Icon(Icons.add, color: bgColor),
-                        label: Text(
-                          "Add Money",
-                          style: TextStyle(
-                            // color: Colors.blue,
-                            color: bgColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                          backgroundColor: Colors.white,
-                          side: BorderSide(
-                            // color: Colors.blue,
-                            color: bgColor,
-                            width: 1.5,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 0,
-                        ),
-                      ),
-                    ),
-
-                  const SizedBox(width: 10),
-
-                  // ✅ Buy Now Button (disabled if not logged in)
-                  Expanded(
-                    child: Opacity(
-                      opacity: canBuy ? 1 : 0.5,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 50),
-                          backgroundColor:
-                          // canBuy ? Colors.blue : Colors.grey[400],
-                          canBuy ? bgColor : Colors.grey[400],
-                          side: BorderSide(
-                            // color: canBuy ? Colors.blueAccent : Colors.grey,
-                            color: canBuy ? bgColor : Colors.grey,
-                            width: 1.2,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: canBuy ? 2 : 0,
-                        ),
-                        onPressed: canBuy ? _confirmOrder : null,
-                        child: const Text(
-                          "Buy Now",
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 30),
-              CustomFooter(),
-            ],
-          ),
+            );
+          },
         ),
-      ),
 
+
+      ),
     );
   }
 }

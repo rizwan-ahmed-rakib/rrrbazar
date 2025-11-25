@@ -4,4 +4,5 @@ final bdConfig = AppConfig(
   flavor: AppFlavor.bdgamebazar,
   appName: "BD Game Bazar",
   flavourClientOrigin: "https://bdgamebazar.com",
+  walletName: 'BD G.Ba. Wallet',
 );

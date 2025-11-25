@@ -1,8 +1,8 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import '../provider/shared_local_storage.dart';
 import '../provider/site_provider.dart';
 import '../provider/user_profile_provider.dart';
 import '../provider/user_provider.dart';
@@ -220,6 +220,17 @@ class CustomDrawer extends StatelessWidget {
 
                   onTap: () async {
                     Navigator.pop(context); // Drawer বন্ধ করবে
+
+                    ////////////////////// if want logout from app drawer ////////
+
+                    // if (item["text"] == "logout") {
+                    //   await removeTokenFromLocalStorage();
+                    //   Provider.of<UserProvider>(context, listen: false).logout();
+                    //   Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+                    // }
+
+                    ////////////////////////////////////
+
 
                     if (item["text"] == "Contact Us") {
                       // await _launchWhatsApp(context, "+8801711223344");

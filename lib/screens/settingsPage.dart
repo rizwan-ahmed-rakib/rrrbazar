@@ -1,11 +1,13 @@
+
 import 'dart:convert';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../provider/base_url.dart';
+import '../provider/shared_local_storage.dart';
 import '../provider/site_provider.dart';
 import '../provider/user_profile_provider.dart' show UserProfileProvider;
 import '../provider/user_provider.dart';
@@ -478,8 +480,7 @@ class _PhoneEditSectionState extends State<PhoneEditSection> {
                 }
 
                 try {
-                  final prefs = await SharedPreferences.getInstance();
-                  final token = prefs.getString('auth_token');
+                  final token = await getTokenFromLocalStorage();
 
                   final response = await http.post(
                     Uri.parse('$backendUrl/api/v1/change-phone'),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../app_flavor.dart';
 import '../provider/site_provider.dart';
 import '../provider/user_profile_provider.dart';
 import 'home_screen.dart';
@@ -28,6 +29,7 @@ class CustomAppBar extends StatefulWidget implements PreferredSizeWidget {
 
 class _CustomAppBarState extends State<CustomAppBar> {
   String userName = "";
+  String ProfileUserName = "";
   String userPhoto = "";
 
   @override
@@ -43,8 +45,9 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      userName = prefs.getString('userName') ?? '';
-      userPhoto = prefs.getString('userPhoto') ?? '';
+      userName = prefs.getString('userName_${AppConfig.instance.flavor.name}') ?? '';
+      ProfileUserName = prefs.getString('ProfileUserName_${AppConfig.instance.flavor.name}') ?? '';
+      userPhoto = prefs.getString('userPhoto_${AppConfig.instance.flavor.name}') ?? '';
     });
   }
 
@@ -72,6 +75,7 @@ class _CustomAppBarState extends State<CustomAppBar> {
 
     // ✅ Provider থেকে ডাটা থাকলে সেটাকে অগ্রাধিকার দিচ্ছি
     final displayName = profile?.username ?? userName;
+    // final displayName = profile?.username ?? ProfileUserName;
     final displayPhoto = profile?.avatar ?? userPhoto;
 
 

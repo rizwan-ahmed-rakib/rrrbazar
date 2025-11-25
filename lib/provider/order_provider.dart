@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/order_model.dart';
 import 'base_url.dart';
+import 'shared_local_storage.dart';
 
 class OrderProvider extends ChangeNotifier {
   List<OrderModel> orders = [];
@@ -16,8 +16,7 @@ class OrderProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      final token = await getTokenFromLocalStorage();
 
       if (token == null) {
         print("⚠️ টোকেন পাওয়া যায়নি");

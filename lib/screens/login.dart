@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-
 import '../provider/base_url.dart';
 import '../provider/site_provider.dart' show SiteProvider;
 import '../provider/user_provider.dart';
@@ -230,6 +229,8 @@ class _LoginScreenState extends State<LoginScreen> {
   // 🔹 Logout ফাংশন
   Future<void> handleLogout() async {
     await _googleSignIn.signOut();
+    await removeTokenFromLocalStorage();
+
 
 
     // ✅ Provider-এ সেট করো

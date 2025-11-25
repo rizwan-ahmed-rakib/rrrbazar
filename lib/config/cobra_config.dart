@@ -3,5 +3,6 @@ import '../app_flavor.dart';
 final cobraConfig = AppConfig(
   flavor: AppFlavor.cobratopups,
   appName: "Cobra TopUp",
-  flavourClientOrigin: "https://cobratopup.com",
+  flavourClientOrigin: "https://cobratopups.com",
+  walletName: 'Cobratop.. wallet',
 );
