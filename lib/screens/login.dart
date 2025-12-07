@@ -13,7 +13,8 @@ import 'footer.dart';
 import 'home_screen.dart';
 import 'registration_screen.dart' show RegisterScreen;
 import 'testing.dart';
-import 'userProfile_screen.dart' show UserProfilePage; // 🔸 তোমার backend URL এখানে থাকবে
+import 'userProfile_screen.dart'
+    show UserProfilePage; // 🔸 তোমার backend URL এখানে থাকবে
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -28,14 +29,16 @@ class _LoginScreenState extends State<LoginScreen> {
   // 🔹 Google SignIn object (এখানে তোমার Web Client ID দিতে হবে)
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     clientId:
-    "895753625041-1eqels2t6o99ieit8mr157oqkt4sl4lu.apps.googleusercontent.com", // তোমার Web Client ID  Rizwan
+        "895753625041-1eqels2t6o99ieit8mr157oqkt4sl4lu.apps.googleusercontent.com",
+    // তোমার Web Client ID  Rizwan
     // "895753625041-2f11rtjpcgt2rgq9rg3303hee3s5aa1g.apps.googleusercontent.com", // তোমার Android Client ID  Rizwan
     // "590339419279-68oe6vvg86t9chn5ruj83okftjuji2d7.apps.googleusercontent.com", //  Web Client ID  RRRBazar
-    scopes: ['email', 'profile','openid'],
+    // "895753625041-pcnvuttdiu3oekaip8akh8r90g3fs39t.apps.googleusercontent.com", //  Web Client ID  RRRBazar
+    scopes: ['email', 'profile', 'openid'],
   );
 
   GoogleSignInAccount? _currentUser;
-
+  bool _isCheckingLogin = true; // ✅ নতুন state যোগ করো
 
   @override
   void initState() {
@@ -43,35 +46,66 @@ class _LoginScreenState extends State<LoginScreen> {
     _checkIfAlreadySignedIn(); // 🔹 অ্যাপ চালু হলে আগের লগইন চেক করবে
   }
 
-
-
   // 🔹 আগের Google লগইন চেক করা
+  // Future<void> _checkIfAlreadySignedIn() async {
+  //   final user = await _googleSignIn.signInSilently();
+  //   if (user != null) {
+  //     setState(() {
+  //       _currentUser = user;
+  //       _isCheckingLogin = false; // ✅ চেক শেষ
+  //
+  //     });
+  //     print("🔁 আগের লগইন পাওয়া গেছে: ${user.displayName}");
+  //
+  //     // ✅ Provider-এ সেট করো
+  //     Provider.of<UserProvider>(context, listen: false).setUser(
+  //       user.displayName ?? '',
+  //       user.email,
+  //       user.photoUrl ?? '',
+  //     );
+  //
+  //     // ✅ যদি আগেই লগইন করা থাকে তাহলে সরাসরি প্রোফাইল পেজে নিয়ে যাও
+  //
+  //     // Future.microtask(() {
+  //     //   Navigator.pushReplacement(
+  //     //     context,
+  //     //     MaterialPageRoute(builder: (context) => const UserProfilePage()),
+  //     //   );
+  //     // });
+  //
+  //   } else {
+  //     setState(() {
+  //       _isCheckingLogin = false; // ✅ চেক শেষ, কিন্তু ইউজার নেই
+  //     });
+  //     print("ℹ️ কোনো ইউজার লগইন করা নেই।");
+  //   }
+  // }
+
   Future<void> _checkIfAlreadySignedIn() async {
-    final user = await _googleSignIn.signInSilently();
-    if (user != null) {
+    try {
+      final user = await _googleSignIn.signInSilently();
+      if (user != null) {
+        setState(() {
+          _currentUser = user;
+          _isCheckingLogin = false; // ✅ চেক শেষ
+        });
+        print("🔁 আগের লগইন পাওয়া গেছে: ${user.displayName}");
+
+        Provider.of<UserProvider>(
+          context,
+          listen: false,
+        ).setUser(user.displayName ?? '', user.email, user.photoUrl ?? '');
+      } else {
+        setState(() {
+          _isCheckingLogin = false; // ✅ চেক শেষ, কিন্তু ইউজার নেই
+        });
+        print("ℹ️ কোনো ইউজার লগইন করা নেই।");
+      }
+    } catch (e) {
       setState(() {
-        _currentUser = user;
+        _isCheckingLogin = false; // ✅ চেক শেষ, error হলেও
       });
-      print("🔁 আগের লগইন পাওয়া গেছে: ${user.displayName}");
-
-      // ✅ Provider-এ সেট করো
-      Provider.of<UserProvider>(context, listen: false).setUser(
-        user.displayName ?? '',
-        user.email,
-        user.photoUrl ?? '',
-      );
-
-      // ✅ যদি আগেই লগইন করা থাকে তাহলে সরাসরি প্রোফাইল পেজে নিয়ে যাও
-
-      // Future.microtask(() {
-      //   Navigator.pushReplacement(
-      //     context,
-      //     MaterialPageRoute(builder: (context) => const UserProfilePage()),
-      //   );
-      // });
-
-    } else {
-      print("ℹ️ কোনো ইউজার লগইন করা নেই।");
+      print("❌ সাইলেন্ট লগইন চেক ব্যর্থ: $e");
     }
   }
 
@@ -95,10 +129,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // 🔹 Google Authentication থেকে টোকেন নেওয়া
       final GoogleSignInAuthentication googleAuth =
-      await googleUser.authentication;
+          await googleUser.authentication;
 
       final idToken = googleAuth.idToken;
-      final accessToken =  googleAuth.accessToken;
+      final accessToken = googleAuth.accessToken;
 
       print("🔹 ব্যবহৃত Google Client ID: ${_googleSignIn.clientId}");
       print("✅ Google Login সফল!");
@@ -112,7 +146,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (idToken != null) {
         _printDecodedIdToken(idToken);
       } else {
-        print("⚠️ Warning: ID Token পাওয়া যায়নি (সম্ভবত ভুল clientId ব্যবহৃত হয়েছে)।");
+        print(
+          "⚠️ Warning: ID Token পাওয়া যায়নি (সম্ভবত ভুল clientId ব্যবহৃত হয়েছে)।",
+        );
       }
 
       setState(() {
@@ -120,14 +156,13 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       // 🔹 এখন Backend এ টোকেন পাঠানো হবে
-      await _sendTokenToBackend(idToken,googleUser);
+      await _sendTokenToBackend(idToken, googleUser);
 
       // ✅ Login সফল হলে Profile Page / Home Page এ redirect করো
       // Navigator.pushReplacement(
       //   context,
       //   MaterialPageRoute(builder: (context) =>  UserProfilePage()),
       // );
-
     } catch (error) {
       print("🔹 ব্যবহৃত Google Client ID: ${_googleSignIn.clientId}");
 
@@ -154,7 +189,9 @@ class _LoginScreenState extends State<LoginScreen> {
       print("🔹 ব্যবহৃত Google Client ID: ${_googleSignIn.clientId}");
       print("📡 টোকেন পাঠানো হচ্ছে সার্ভারে...");
       print("🔗 API URL: $url");
-      print("🛰️ ব্যবহৃত x-client-origin: $clientOrigin"); // 👈 এখন কনসোলে দেখা যাবে
+      print(
+        "🛰️ ব্যবহৃত x-client-origin: $clientOrigin",
+      ); // 👈 এখন কনসোলে দেখা যাবে
 
       final response = await http.post(
         url,
@@ -187,10 +224,9 @@ class _LoginScreenState extends State<LoginScreen> {
           // ✅ Login সফল হলে Profile Page / Home Page এ redirect করো
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) =>  UserProfilePage()),
+            MaterialPageRoute(builder: (context) => UserProfilePage()),
           );
           print("💾 টোকেন লোকালি সেভ করা হয়েছে: $token");
-
         } else {
           print("⚠️ সার্ভার থেকে কোনো টোকেন পাওয়া যায়নি।");
         }
@@ -202,7 +238,6 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-
   // 🔹 ID Token ডিকোড করে Full Payload দেখা (Raw User Info)
   void _printDecodedIdToken(String idToken) {
     try {
@@ -212,7 +247,9 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+      final payload = utf8.decode(
+        base64Url.decode(base64Url.normalize(parts[1])),
+      );
       print("🧾 Full Google ID Token Payload:");
       print(payload);
 
@@ -231,8 +268,6 @@ class _LoginScreenState extends State<LoginScreen> {
     await _googleSignIn.signOut();
     await removeTokenFromLocalStorage();
 
-
-
     // ✅ Provider-এ সেট করো
 
     Provider.of<UserProvider>(context, listen: false).logout();
@@ -246,140 +281,163 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ লোডিং হলে CircularProgressIndicator দেখাও
+    if (_isCheckingLogin) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
     final siteProvider = Provider.of<SiteProvider>(context);
     final site = siteProvider.siteData;
     final logoUrl = "$backendUrl/images/${site?.logo}";
     final userProvider = Provider.of<UserProvider>(context);
     final user = userProvider;
     // 🔹 যদি ইউজার লগইন করে থাকে, তাহলে তার প্রোফাইল ছবি দেখাও
-    final String profileImage = _currentUser?.photoUrl ??
+    final String profileImage =
+        _currentUser?.photoUrl ??
         "https://img.icons8.com/color/48/000000/google-logo.png";
 
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushReplacementNamed(
+          context,
+          '/home',
+        ); //back button e home screen e ferar jonno
+        return false; // default back-block
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xfff7f9fc),
+        drawer: CustomDrawer(),
 
-
-    return Scaffold(
-      backgroundColor: const Color(0xfff7f9fc),
-      drawer: CustomDrawer(),
-
-
-      appBar: CustomAppBar( logoUrl: logoUrl, isLoggedIn: user.isLoggedIn,),
+        appBar: CustomAppBar(logoUrl: logoUrl, isLoggedIn: user.isLoggedIn),
 
         // 🟢 Body
-      body: SingleChildScrollView(
+        body: SingleChildScrollView(
+          child:
+              _currentUser == null
+                  ?
+                  // Center(
+                  //   child: _buildLoginCard(),
+                  // )
+                  Column(
+                    mainAxisAlignment:
+                        MainAxisAlignment.center, // 🔥 এখানে magic!
+                    children: [
+                      const SizedBox(height: 150),
+                      _buildLoginCard(),
 
+                      // const SizedBox(height: 300),
+                      // CustomFooter(),
 
-        child: _currentUser == null
-            ? Column(
-          children: [
-            const SizedBox(height: 30),
-            _buildLoginCard(),
-            const SizedBox(height: 60),
-            // CustomFooter(),
-
-            // const SizedBox(height: 100),
-            // const CustomFooter(), // scrollable footer
-
-
-          ],
-        )
-
-          : Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // 🔹 Profile Card
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 🔹 Profile Image
-                  CircleAvatar(
-                    backgroundImage: NetworkImage(_currentUser!.photoUrl ?? ""),
-                    radius: 50,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 🔹 Name
-                  Text(
-                    _currentUser!.displayName ?? "No Name",
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-
-                  // 🔹 Email
-                  Text(
-                    _currentUser!.email ?? "",
-                    style: TextStyle(
-                      color: Colors.grey[700],
-                      fontSize: 14,
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // 🔹 Logout Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: handleLogout,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                      // const SizedBox(height: 100),
+                      // const CustomFooter(), // scrollable footer
+                    ],
+                  )
+                  : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // 🔹 Profile Card
+                      Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 40,
                         ),
-                        elevation: 3,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // 🔹 Profile Image
+                            CircleAvatar(
+                              backgroundImage: NetworkImage(
+                                _currentUser!.photoUrl ?? "",
+                              ),
+                              radius: 50,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // 🔹 Name
+                            Text(
+                              _currentUser!.displayName ?? "No Name",
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+
+                            // 🔹 Email
+                            Text(
+                              _currentUser!.email ?? "",
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontSize: 14,
+                              ),
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            // 🔹 Logout Button
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton.icon(
+                                onPressed: handleLogout,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.redAccent,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 3,
+                                ),
+                                icon: const Icon(
+                                  Icons.logout,
+                                  color: Colors.white,
+                                ),
+                                label: const Text(
+                                  "Logout",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      icon: const Icon(Icons.logout, color: Colors.white),
-                      label: const Text(
-                        "Logout",
-                        style: TextStyle(fontSize: 16, color: Colors.white),
-                      ),
-                    ),
+
+                      // 🔹 নিচে footer বা অন্যান্য widget রাখতে পারো
+                      // const Spacer(),
+                      // CustomFooter(),
+
+                      // const SizedBox(height: 100),
+                      // const CustomFooter(), // scrollable footer
+                    ],
                   ),
-                ],
-              ),
-            ),
+        ),
 
-            // 🔹 নিচে footer বা অন্যান্য widget রাখতে পারো
-            // const Spacer(),
-            // CustomFooter(),
-
-            // const SizedBox(height: 100),
-            // const CustomFooter(), // scrollable footer
-          ],
-        )
+        // 🟢 Footer নিচে ফিক্সড থাকবে
+        bottomNavigationBar: CustomFooter(),
       ),
-
-      // 🟢 Footer নিচে ফিক্সড থাকবে
-
-
-
-      bottomNavigationBar: CustomFooter(),
-
-
-
     );
   }
-
-
 
   Widget _buildLoginCard() {
     final siteProvider = Provider.of<SiteProvider>(context);
@@ -391,7 +449,6 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       bgColor = Color(int.parse("0xff${site?.color}"));
     } catch (_) {}
-
 
     return Center(
       child: Container(
@@ -420,7 +477,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
                 // side: const BorderSide(color: Colors.grey),
-                side: BorderSide(color:bgColor),
+                side: BorderSide(color: bgColor),
                 minimumSize: const Size(double.infinity, 45),
               ),
               icon: Image.network(
@@ -431,75 +488,9 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: _handleGoogleSignIn,
             ),
             const SizedBox(height: 20),
-
-            // TextButton(
-            //   onPressed: () {
-            //     // ✅ চাইলে এখান থেকেও Sign-in পেজে যাও
-            //     Navigator.push(
-            //       context,
-            //       MaterialPageRoute(builder: (_) => const GoogleSmartSignInButton()),
-            //     );              },
-            //   child: const Text("test login page"),
-            // ),
-
-            // TextField(
-            //   decoration: InputDecoration(
-            //     labelText: "Email",
-            //     border: OutlineInputBorder(
-            //       borderRadius: BorderRadius.circular(8),
-            //     ),
-            //   ),
-            // ),
-            // const SizedBox(height: 15),
-            // TextField(
-            //   obscureText: true,
-            //   decoration: InputDecoration(
-            //     labelText: "Password",
-            //     border: OutlineInputBorder(
-            //       borderRadius: BorderRadius.circular(8),
-            //     ),
-            //   ),
-            // ),
-            // const SizedBox(height: 10),
-            // Row(
-            //   children: [
-            //     Checkbox(value: true, onChanged: (v) {}),
-            //     const Text("Remember me"),
-            //   ],
-            // ),
-            // const SizedBox(height: 10),
-            // SizedBox(
-            //   width: double.infinity,
-            //   height: 45,
-            //   child: ElevatedButton(
-            //     onPressed: () {},
-            //     child: const Text("Login"),
-            //   ),
-            // ),
-            // const SizedBox(height: 15),
-            // TextButton(
-            //   onPressed: () {},
-            //   child: const Text("Forgot password?"),
-            // ),
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.center,
-            //   children: [
-            //     const Text("Don’t have an account? "),
-            //     GestureDetector(
-            //       onTap: () {},
-            //       child: const Text(
-            //         "Create One",
-            //         style: TextStyle(color: Colors.blue),
-            //       ),
-            //     ),
-            //   ],
-            // ),
           ],
         ),
       ),
     );
   }
 }
-
-
-

@@ -2,11 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
 import '../app_flavor.dart';
-import '../provider/base_url.dart' show backendUrl;
+import '../provider/base_url.dart' show ClientOrigin, backendUrl;
 import '../provider/shared_local_storage.dart';
 import '../provider/site_provider.dart';
 import '../provider/user_profile_provider.dart';
@@ -17,6 +18,7 @@ import 'customdrawer.dart';
 import 'footer.dart';
 import 'home_screen.dart';
 import 'login.dart';
+import 'myorders_page.dart';
 import 'payment_webview.dart';
 import 'registration_screen.dart';
 
@@ -41,23 +43,30 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
   final TextEditingController amountController = TextEditingController();
   List<dynamic> rechargePacks = [];
   bool isLoading = true;
-  String selectedPayment = "RRR Bazar Wallet";
+  final walletName = AppConfig.instance.walletName;
+
+  // String selectedPayment = "RRR Bazar Wallet";
+  String selectedPayment = AppConfig.instance.walletName;
+
   int? selectedPackIndex;
   double? selectedPackagePrice; // nullable কারণ শুরুতে কিছু সিলেক্ট থাকে না
-  final walletName = AppConfig.instance.walletName;
-  // final walletName = AppConfig.instance.walletName;
-
 
   var selectedPackageName;
 
   var selectedPackageId;
   bool isSubmitting = false;
 
-
   @override
   void initState() {
     super.initState();
     fetchRechargePacks();
+    Future.microtask(
+          () =>
+          Provider.of<UserProfileProvider>(
+            context,
+            listen: false,
+          ).fetchUserProfile(),
+    );
   }
 
   Future<void> fetchRechargePacks() async {
@@ -168,7 +177,6 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
       },
     );
   }
-
 
   double _convertToDouble(dynamic value) {
     if (value == null) return 0.0;
@@ -488,6 +496,278 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
 
   /////////////////**modified confirm order function for bind unnecessary /////////////////////////////////////////////
 
+  // Future<void> _confirmOrder() async {
+  //   final token = await getTokenFromLocalStorage();
+  //
+  //   final profileProvider = Provider.of<UserProfileProvider>(
+  //     context,
+  //     listen: false,
+  //   );
+  //   final profile = profileProvider.profileData?.data;
+  //   final double walletBalance = _convertToDouble(profile?.wallet);
+  //   final ingamepassword = "IDCODE";
+  //   final securitycode = "IDCODE";
+  //   // int payment_method = selectedPayment == "RRR Bazar Wallet" ? 1 : 2;
+  //   int payment_method = selectedPayment == walletName ? 1 : 2;
+  //   String playerId = playerIdController.text;
+  //
+  //   if (playerIdController.text.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("❌ Player ID দিন!")));
+  //     return;
+  //   }
+  //
+  //   if (selectedPackIndex == null) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text("❌ Recharge Pack Select করুন!")),
+  //     );
+  //     return;
+  //   }
+  //
+  //   print("✅✅✅ Confirm order function is clicked ✅✅");
+  //
+  //   showDialog(
+  //     context: context,
+  //     useRootNavigator: true,
+  //     builder: (context) {
+  //       bool isSubmitting = false; // 🔹 Local state for dialog
+  //
+  //       return StatefulBuilder(
+  //         builder: (context, setDialogState) {
+  //           return AlertDialog(
+  //             shape: RoundedRectangleBorder(
+  //               borderRadius: BorderRadius.circular(8),
+  //             ),
+  //             title: const Text(
+  //               "Confirm Order",
+  //               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+  //             ),
+  //             content: SingleChildScrollView(
+  //               child: Column(
+  //                 mainAxisSize: MainAxisSize.min,
+  //                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                 children: [
+  //                   Text(
+  //                     "Your current wallet is ৳${walletBalance.toStringAsFixed(0)}",
+  //                     style: const TextStyle(fontSize: 15, color: Colors.black87),
+  //                   ),
+  //                   const SizedBox(height: 6),
+  //                   Text(
+  //                     "You need ৳${selectedPackagePrice} to purchase this product.",
+  //                     style: const TextStyle(fontSize: 15, color: Colors.black87),
+  //                   ),
+  //                 ],
+  //               ),
+  //             ),
+  //             actionsPadding: const EdgeInsets.symmetric(
+  //               horizontal: 15,
+  //               vertical: 10,
+  //             ),
+  //             actionsAlignment: MainAxisAlignment.start,
+  //             actions: [
+  //               ElevatedButton(
+  //                 onPressed: isSubmitting
+  //                     ? null
+  //                     : () async {
+  //                   print("🔄 Starting order submission...");
+  //
+  //                   setDialogState(() => isSubmitting = true);
+  //
+  //                   // ✅ ব্যালেন্স চেক শুধু Wallet-এর জন্য
+  //                   // if (selectedPayment == "RRR Bazar Wallet" &&
+  //                   if (selectedPayment == walletName &&
+  //                       walletBalance < (selectedPackagePrice ?? 0)) {
+  //                     ScaffoldMessenger.of(context).showSnackBar(
+  //                       SnackBar(
+  //                         content: Text(
+  //                           "❌ পর্যাপ্ত ব্যালেন্স নেই! আপনার ওয়ালেটে ৳${walletBalance.toStringAsFixed(0)} আছে।",
+  //                         ),
+  //                       ),
+  //                     );
+  //                     setDialogState(() => isSubmitting = false);
+  //                     return;
+  //                   }
+  //
+  //                   // ✅ এখানে আসল Order API চালু হবে
+  //                   final url = Uri.parse("${backendUrl}/api/v1/packageorder");
+  //
+  //                   final body = {
+  //                     "topup_package_id": selectedPackageId,
+  //                     "product_id": widget.id,
+  //                     "name": selectedPackageName,
+  //                     "playerid": playerId,
+  //                     "ingamepassword": ingamepassword,
+  //                     "securitycode": securitycode,
+  //                     "payment_method": payment_method,
+  //                   };
+  //
+  //                   print("📦 Sending Order to $url");
+  //                   print("📤 Request Body: $body");
+  //
+  //                   try {
+  //                     final response = await http.post(
+  //                       url,
+  //                       headers: {
+  //                         "Content-Type": "application/json",
+  //                         "Authorization": "Bearer $token",
+  //                       },
+  //                       body: jsonEncode(body),
+  //                     );
+  //
+  //                     if (response.statusCode == 200 || response.statusCode == 201) {
+  //                       final data = jsonDecode(response.body);
+  //                       final paymentUrl = data['data']?['payment_url'];
+  //
+  //                       if (paymentUrl != null && selectedPayment == "Auto Payment") {
+  //                         print("🌐 Redirecting to Payment URL: $paymentUrl");
+  //
+  //                         Navigator.pop(context); // Close dialog first
+  //
+  //                         await Future.delayed(const Duration(milliseconds: 100));
+  //                         if (!mounted) return;
+  //
+  //                         Navigator.push(
+  //                           context,
+  //                           MaterialPageRoute(
+  //                             builder: (_) => PaymentWebView(paymentUrl: paymentUrl),
+  //                           ),
+  //                         );
+  //                       } else {
+  //                         print("✅ API response: ${response.body}");
+  //
+  //                         Navigator.pop(context); // Close dialog first
+  //
+  //                         // ✅ ProfileProvider ইনিশিয়ালাইজ
+  //                         final profileProvider = Provider.of<UserProfileProvider>(
+  //                           context,
+  //                           listen: false,
+  //                         );
+  //                         await profileProvider.refreshProfile();
+  //
+  //                         ScaffoldMessenger.of(context).showSnackBar(
+  //                           const SnackBar(
+  //                             content: Text("✅ Order Confirmed Successfully!"),
+  //                             behavior: SnackBarBehavior.floating,
+  //                             margin: EdgeInsets.only(
+  //                               top: 20,
+  //                               left: 10,
+  //                               right: 10,
+  //                             ),
+  //                             backgroundColor: Colors.green,
+  //                           ),
+  //                         );
+  //
+  //                         // ✅ Redirect to orders page
+  //                         Future.microtask(() async {
+  //                           await Future.delayed(const Duration(seconds: 1));
+  //                           // if (context.mounted) {
+  //                           //   Navigator.pushReplacementNamed(
+  //                           //     context,
+  //                           //     "/myOrdersPage",
+  //                           //   );
+  //                           // }
+  //
+  //                           if (context.mounted) {
+  //                             Navigator.pushAndRemoveUntil(
+  //                               context,
+  //                               MaterialPageRoute(builder: (_) => MyOrdersPage()), // আপনার Orders Page
+  //                                   (route) => false, // সব previous route remove করবে
+  //                             );
+  //                           }
+  //
+  //                           // if (context.mounted) {
+  //                           //   Navigator.of(context).pushNamedAndRemoveUntil(
+  //                           //     '/myOrdersPage',
+  //                           //         (route) => false,
+  //                           //   );
+  //                           // }
+  //
+  //                         });
+  //                       }
+  //                     } else {
+  //                       print("❌ API Error: ${response.body}");
+  //                       setDialogState(() => isSubmitting = false);
+  //                       ScaffoldMessenger.of(context).showSnackBar(
+  //                         SnackBar(
+  //                           content: Text("⚠️ Order Failed (${response.statusCode})"),
+  //                         ),
+  //                       );
+  //                     }
+  //                   } catch (e) {
+  //                     print("❌ Exception: $e");
+  //                     setDialogState(() => isSubmitting = false);
+  //                     ScaffoldMessenger.of(context).showSnackBar(
+  //                       const SnackBar(
+  //                         content: Text("🚫 Network Error! আবার চেষ্টা করুন"),
+  //                       ),
+  //                     );
+  //                   }
+  //                 },
+  //                 style: ElevatedButton.styleFrom(
+  //                   backgroundColor: Colors.lightBlue,
+  //                   padding: const EdgeInsets.symmetric(
+  //                     horizontal: 20,
+  //                     vertical: 12,
+  //                   ),
+  //                   shape: RoundedRectangleBorder(
+  //                     borderRadius: BorderRadius.circular(6),
+  //                   ),
+  //                 ),
+  //                 child: isSubmitting
+  //                     ? const SizedBox(
+  //                   height: 20,
+  //                   width: 20,
+  //                   child: CircularProgressIndicator(
+  //                     strokeWidth: 2,
+  //                     color: Colors.white,
+  //                   ),
+  //                 )
+  //                     : const Text(
+  //                   "Confirm Order",
+  //                   style: TextStyle(
+  //                     color: Colors.white,
+  //                     fontWeight: FontWeight.bold,
+  //                     fontSize: 15,
+  //                   ),
+  //                 ),
+  //               ),
+  //               TextButton(
+  //                 onPressed: isSubmitting ? null : () => Navigator.pop(context),
+  //                 style: TextButton.styleFrom(
+  //                   backgroundColor: Colors.red,
+  //                   padding: const EdgeInsets.symmetric(
+  //                     horizontal: 20,
+  //                     vertical: 12,
+  //                   ),
+  //                   shape: RoundedRectangleBorder(
+  //                     borderRadius: BorderRadius.circular(6),
+  //                   ),
+  //                 ),
+  //                 child: const Text(
+  //                   "Cancel",
+  //                   style: TextStyle(
+  //                     color: Colors.white,
+  //                     fontWeight: FontWeight.bold,
+  //                     fontSize: 15,
+  //                   ),
+  //                 ),
+  //               ),
+  //             ],
+  //           );
+  //         },
+  //       );
+  //     },
+  //   );
+  // }
+
+  void printLong(Object data) {
+    final text = data.toString();
+    const chunk = 800;
+    for (int i = 0; i < text.length; i += chunk) {
+      print(
+        text.substring(i, i + chunk > text.length ? text.length : i + chunk),
+      );
+    }
+  }
 
   Future<void> _confirmOrder() async {
     final token = await getTokenFromLocalStorage();
@@ -500,12 +780,23 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
     final double walletBalance = _convertToDouble(profile?.wallet);
     final ingamepassword = "IDCODE";
     final securitycode = "IDCODE";
-    int payment_method = selectedPayment == "RRR Bazar Wallet" ? 1 : 2;
+    int payment_method = selectedPayment == walletName ? 1 : 2;
     String playerId = playerIdController.text;
 
-    if (playerIdController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("❌ Player ID দিন!")));
-      return;
+
+    // ✅ শুধুমাত্র UniPin Voucher না হলে Player ID validation চেক করবে
+
+    // if (!widget.title.toLowerCase().contains("unipin voucher")) {
+    //   // validation code
+    // }       //🔹 Case insensitive করার জন্য
+
+    if (!widget.title.contains("UniPin Voucher")) {
+      if (playerIdController.text.isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("❌ Player ID দিন!")));
+        return;
+      }
     }
 
     if (selectedPackIndex == null) {
@@ -520,11 +811,18 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
     showDialog(
       context: context,
       useRootNavigator: true,
+      barrierDismissible: false,
       builder: (context) {
-        bool isSubmitting = false; // 🔹 Local state for dialog
+        bool isSubmitting = false;
 
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            void safeSetState(void Function() fn) {
+              if (context.mounted) {
+                setDialogState(fn);
+              }
+            }
+
             return AlertDialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -539,13 +837,20 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Your current wallet is ৳${walletBalance.toStringAsFixed(0)}",
-                      style: const TextStyle(fontSize: 15, color: Colors.black87),
+                      "Your current wallet is ৳${walletBalance
+                          .toStringAsFixed(0)}",
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.black87,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       "You need ৳${selectedPackagePrice} to purchase this product.",
-                      style: const TextStyle(fontSize: 15, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.black87,
+                      ),
                     ),
                   ],
                 ),
@@ -557,29 +862,33 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
               actionsAlignment: MainAxisAlignment.start,
               actions: [
                 ElevatedButton(
-                  onPressed: isSubmitting
+                  onPressed:
+                  isSubmitting
                       ? null
                       : () async {
                     print("🔄 Starting order submission...");
 
-                    setDialogState(() => isSubmitting = true);
+                    safeSetState(() => isSubmitting = true);
 
                     // ✅ ব্যালেন্স চেক শুধু Wallet-এর জন্য
-                    if (selectedPayment == "RRR Bazar Wallet" &&
+                    if (selectedPayment == walletName &&
                         walletBalance < (selectedPackagePrice ?? 0)) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            "❌ পর্যাপ্ত ব্যালেন্স নেই! আপনার ওয়ালেটে ৳${walletBalance.toStringAsFixed(0)} আছে।",
+                            "❌ পর্যাপ্ত ব্যালেন্স নেই! আপনার ওয়ালেটে ৳${walletBalance
+                                .toStringAsFixed(0)} আছে।",
                           ),
                         ),
                       );
-                      setDialogState(() => isSubmitting = false);
+                      safeSetState(() => isSubmitting = false);
                       return;
                     }
 
                     // ✅ এখানে আসল Order API চালু হবে
-                    final url = Uri.parse("${backendUrl}/api/v1/packageorder");
+                    final url = Uri.parse(
+                      "${backendUrl}/api/v1/packageorder",
+                    );
 
                     final body = {
                       "topup_package_id": selectedPackageId,
@@ -600,79 +909,218 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                         headers: {
                           "Content-Type": "application/json",
                           "Authorization": "Bearer $token",
+                          "x-client-origin": ClientOrigin, // ✅ এখানে ব্যবহার হচ্ছে
+
                         },
                         body: jsonEncode(body),
                       );
 
-                      if (response.statusCode == 200 || response.statusCode == 201) {
+                      // print("🔵 API Response Status: ${response.statusCode}");
+                      // print("🔵 API Response Body: ${response.body}");
+
+                      print(
+                        "🔵 API Response Status: ${response.statusCode}",
+                      );
+                      // debugPrint("🔵 API Response Body: ${response.body}", wrapWidth: 2024);
+                      debugPrint("🔵 API Response Body:🔵");
+                      printLong(response.body);
+                      debugPrint("🔵🔵 API Response Body close 🔵🔵");
+
+                      if (response.statusCode == 200 ||
+                          response.statusCode == 201) {
                         final data = jsonDecode(response.body);
                         final paymentUrl = data['data']?['payment_url'];
+                        debugPrint(
+                          "🔵 after 200 API Response Body: ${response.body}",
+                          wrapWidth: 2024,
+                        );
+                        debugPrint(
+                          "🔵🔵🔵 API Response Body after 200 :🔵🔵🔵",
+                        );
+                        printLong(data);
+                        debugPrint(
+                          "🔵🔵🔵 API Response Body close after 200 :🔵🔵🔵",
+                        );
+
+                        print("🔵 Payment URL: $paymentUrl");
+                        print("🔵 Selected Payment: $selectedPayment");
+
+                        // ✅ Auto Payment Case
+                        ///////////////main condition live payment misssing/////////////////////////
+
+                        // if (paymentUrl != null && selectedPayment == "Auto Payment") {
+                        //   print(
+                        //     "🌐 Redirecting to Payment URL: $paymentUrl",
+                        //   );
+                        //
+                        //   Navigator.pop(context); // Close dialog
+                        //
+                        //   await Future.delayed(
+                        //     const Duration(milliseconds: 100),
+                        //   );
+                        //
+                        //   if (context.mounted) {
+                        //     Navigator.push(
+                        //       context,
+                        //       MaterialPageRoute(
+                        //         builder:
+                        //             (_) => PaymentWebView(
+                        //               paymentUrl: paymentUrl,
+                        //             ),
+                        //       ),
+                        //     );
+                        //   }
+                        // }
+
+                        //////////////////////testing if lively payment work!! //////////////////////////////////////////////////
 
                         if (paymentUrl != null && selectedPayment == "Auto Payment") {
-                          print("🌐 Redirecting to Payment URL: $paymentUrl");
-
-                          Navigator.pop(context); // Close dialog first
-
-                          await Future.delayed(const Duration(milliseconds: 100));
-                          if (!mounted) return;
-
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => PaymentWebView(paymentUrl: paymentUrl),
-                            ),
+                          print(
+                            "🌐 Redirecting to Payment URL: $paymentUrl",
                           );
-                        } else {
-                          print("✅ API response: ${response.body}");
 
-                          Navigator.pop(context); // Close dialog first
+                          Navigator.pop(context); // Close dialog
 
-                          // ✅ ProfileProvider ইনিশিয়ালাইজ
-                          final profileProvider = Provider.of<UserProfileProvider>(
+                          await Future.delayed(
+                            const Duration(milliseconds: 100),
+                          );
+
+                          if (context.mounted) {
+                            // Auto Payment এর জন্য
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PaymentWebView(
+                                  paymentUrl: paymentUrl,
+                                  orderType: "auto_payment", // ✅ Auto Payment
+                                ),
+                              ),
+                            );                          }
+                        }
+
+                        ///////////////////////////////////////////////////////////////
+
+
+                        // if (paymentUrl != null && selectedPayment == "Auto Payment") {
+                        //   print("🌐 Redirecting to Payment URL: $paymentUrl");
+                        //
+                        //   Navigator.pop(context); // Close dialog first
+                        //
+                        //   await Future.delayed(
+                        //       const Duration(milliseconds: 300));
+                        //   if (!mounted) return;
+                        //
+                        //   Navigator.push(
+                        //     context,
+                        //     MaterialPageRoute(
+                        //       builder: (_) =>
+                        //           PaymentWebView(paymentUrl: paymentUrl),
+                        //     ),
+                        //   );
+                        // }
+
+                        // // ✅ Wallet Payment Case - FIXED VERSION
+                        else {
+                          print(
+                            "✅ Wallet Payment Success - Starting redirect process",
+                          );
+
+                          // ✅ Profile refresh FIRST
+                          final profileProvider =
+                          Provider.of<UserProfileProvider>(
                             context,
                             listen: false,
                           );
                           await profileProvider.refreshProfile();
+                          print("✅ Profile refreshed");
 
+                          // ✅ Show success message BEFORE closing dialog
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                              content: Text("✅ Order Confirmed Successfully!"),
-                              behavior: SnackBarBehavior.floating,
-                              margin: EdgeInsets.only(
-                                top: 20,
-                                left: 10,
-                                right: 10,
+                              content: Text(
+                                "✅ Order Confirmed Successfully!",
                               ),
                               backgroundColor: Colors.green,
+                              duration: Duration(seconds: 2),
                             ),
                           );
+                          print("✅ Snackbar shown");
 
-                          // ✅ Redirect to orders page
-                          Future.microtask(() async {
-                            await Future.delayed(const Duration(seconds: 1));
-                            if (context.mounted) {
-                              Navigator.pushReplacementNamed(
-                                context,
-                                "/myOrdersPage",
+                          // ✅ Store the parent context before closing dialog
+                          final BuildContext parentContext =
+                              this.context;
+
+                          // ✅ Close dialog
+                          Navigator.pop(context);
+                          print("✅ Dialog closed");
+
+                          // ✅ Use direct Navigator with parent context after delay
+                          Future.delayed(const Duration(milliseconds: 500), () {
+                            print(
+                              "🔄 Attempting navigation with parent context...",
+                            );
+
+                            if (parentContext.mounted) {
+                              // print("✅ Parent context is mounted, navigating...");
+                              print(
+                                "🔄 Navigating with pushReplacement...",
                               );
+
+                              // ✅ Method 1: Direct Navigator.pushAndRemoveUntil
+                              // Navigator.pushAndRemoveUntil(
+                              Navigator.pushReplacement(
+                                parentContext,
+                                MaterialPageRoute(
+                                  builder: (_) => MyOrdersPage(),
+                                ),
+                                // (route) => false,
+                              );
+                              print(
+                                "✅ Navigation to MyOrdersPage completed",
+                              );
+                            } else {
+                              print("❌ Parent context not mounted");
+
+                              // ✅ Method 2: Try with navigatorKey if available
+                              try {
+                                // যদি আপনার main.dart-এ navigatorKey থাকে
+                                // Navigator.pushAndRemoveUntil(
+                                //   navigatorKey.currentContext!,
+                                //   MaterialPageRoute(builder: (_) => MyOrdersPage()),
+                                //   (route) => false,
+                                // );
+                                print("⚠️ No navigatorKey available");
+                              } catch (e) {
+                                print(
+                                  "❌ All navigation methods failed: $e",
+                                );
+                              }
                             }
                           });
                         }
                       } else {
-                        print("❌ API Error: ${response.body}");
-                        setDialogState(() => isSubmitting = false);
+                        print(
+                          "❌ API Error: ${response.statusCode} - ${response
+                              .body}",
+                        );
+                        safeSetState(() => isSubmitting = false);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text("⚠️ Order Failed (${response.statusCode})"),
+                            content: Text(
+                              "⚠️ Order Failed (${response.statusCode})",
+                            ),
                           ),
                         );
                       }
                     } catch (e) {
                       print("❌ Exception: $e");
-                      setDialogState(() => isSubmitting = false);
+                      safeSetState(() => isSubmitting = false);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text("🚫 Network Error! আবার চেষ্টা করুন"),
+                          content: Text(
+                            "🚫 Network Error! আবার চেষ্টা করুন",
+                          ),
                         ),
                       );
                     }
@@ -687,7 +1135,8 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                       borderRadius: BorderRadius.circular(6),
                     ),
                   ),
-                  child: isSubmitting
+                  child:
+                  isSubmitting
                       ? const SizedBox(
                     height: 20,
                     width: 20,
@@ -745,8 +1194,7 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
         height: size,
         errorBuilder: (c, e, s) => const Icon(Icons.image_not_supported),
       );
-    }
-    else {
+    } else {
       return Image.asset(
         path,
         height: size,
@@ -755,13 +1203,10 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
     }
   }
 
-
   Widget paymentOption(String name, String imagePath) {
     final siteProvider = Provider.of<SiteProvider>(context);
     final site = siteProvider.siteData;
     bool isNetwork = imagePath.startsWith("http");
-
-
 
     // 🔹 Dynamic background color
 
@@ -812,14 +1257,13 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
             //
             //
             // ),
-
             Padding(
               padding: const EdgeInsets.all(10),
-              child: isNetwork
+              child:
+              isNetwork
                   ? Image.network(imagePath, height: 45)
                   : Image.asset(imagePath, height: 45),
             ),
-
 
             // 🔹 নিচের টেক্সট অংশ (সিলেক্ট করলে রঙ বদলাবে)
             Container(
@@ -880,129 +1324,654 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
               ),
             ),
           ],
-
-
-
         ),
       ),
     );
   }
 
+  ////////////////////////////////////////
 
-////////////////////////////////////////
+  // Widget buildRechargeGrid() {
+  //   final siteProvider = Provider.of<SiteProvider>(context);
+  //   final site = siteProvider.siteData;
+  //
+  //
+  //   // 🔹 Dynamic background color
+  //
+  //   // Color bgColor = Colors.lightBlueAccent;
+  //   Color bgColor = Colors.transparent;
+  //   try {
+  //     bgColor = Color(int.parse("0xff${site?.color}"));
+  //   } catch (_) {}
+  //
+  //
+  //   return LayoutBuilder(
+  //     builder: (context, constraints) {
+  //       double aspectRatio;
+  //
+  //       if (constraints.maxWidth < 360) {
+  //         aspectRatio = 2.9; // আরও ছোট
+  //       } else if (constraints.maxWidth < 480) {
+  //         // aspectRatio = 1.25;
+  //         aspectRatio = 2.9;
+  //       } else {
+  //         // aspectRatio = 1.45;
+  //         aspectRatio = 2.9;
+  //       }
+  //
+  //       return GridView.builder(
+  //         itemCount: rechargePacks.length,
+  //         shrinkWrap: true,
+  //         physics: const NeverScrollableScrollPhysics(),
+  //         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+  //           crossAxisCount: 2,
+  //           crossAxisSpacing: 8,
+  //           mainAxisSpacing: 11,
+  //           childAspectRatio: aspectRatio,
+  //         ),
+  //
+  //
+  //         itemBuilder: (context, index) {
+  //           bool isSelected = selectedPackIndex == index;
+  //           final pack = rechargePacks[index];
+  //
+  //           bool isOutOfStock = pack["in_stock"] == 0;
+  //
+  //           return GestureDetector(
+  //             onTap: isOutOfStock
+  //                 ? null
+  //                 : () {
+  //               setState(() {
+  //                 selectedPackIndex = index;
+  //                 selectedPackagePrice = _convertToDouble(pack["price"]);
+  //                 selectedPackageName = pack["name"];
+  //                 selectedPackageId = pack["id"];
+  //               });
+  //             },
+  //
+  //             child: Stack(
+  //               clipBehavior: Clip.none, // badge overlap allow করবে
+  //               children: [
+  //                 // 🌟 MAIN CARD
+  //                 AnimatedContainer(
+  //                   duration: const Duration(milliseconds: 180),
+  //                   padding: const EdgeInsets.all(6),
+  //                   decoration: BoxDecoration(
+  //                     color: isOutOfStock
+  //                         ? Colors.grey.shade300
+  //                         // ? Colors.white
+  //                         : (isSelected ? bgColor.withOpacity(0.1) : Colors.white),
+  //                     border: Border.all(
+  //                       color: isOutOfStock
+  //                           ? Colors.grey
+  //                           // ? bgColor
+  //                           : (isSelected ? bgColor : Colors.grey.shade400),
+  //                       width: 1.2,
+  //                     ),
+  //                     borderRadius: BorderRadius.circular(8),
+  //                   ),
+  //                   child:
+  //
+  //
+  //
+  //                   Column(
+  //                     children: [
+  //                       // 🔵 Name
+  //                       // Expanded(
+  //                       //   flex: 4,
+  //                       //   child: Text(
+  //                       //     pack["name"] ?? "",
+  //                       //     textAlign: TextAlign.center,
+  //                       //     maxLines: 3,
+  //                       //     overflow: TextOverflow.ellipsis,
+  //                       //     style: TextStyle(
+  //                       //       fontWeight: FontWeight.w600,
+  //                       //       fontSize: 12.5,
+  //                       //       height: 1.5,
+  //                       //       color: isOutOfStock ? Colors.grey : Colors.black,
+  //                       //       // color: isOutOfStock ? Colors.black : Colors.black,
+  //                       //     ),
+  //                       //   ),
+  //                       // ),
+  //
+  //                       Expanded(
+  //                         flex: 4,
+  //                         child: LayoutBuilder(
+  //                           builder: (context, boxConstraints) {
+  //                             final name = pack["name"] ?? "";
+  //
+  //                             return Column(
+  //                               children: [
+  //                                 // 🔹 Auto fitting box
+  //                                 Expanded(
+  //                                   child: FittedBox(
+  //                                     fit: BoxFit.scaleDown,
+  //                                     alignment: Alignment.center, // ছোট হলে সেন্টার
+  //                                     child: ConstrainedBox(
+  //                                       constraints: BoxConstraints(
+  //                                         maxWidth: boxConstraints.maxWidth,
+  //                                       ),
+  //                                       child: Text(
+  //                                         name,
+  //                                         textAlign: TextAlign.center,
+  //                                         maxLines: 3,
+  //                                         style: TextStyle(
+  //                                           fontWeight: FontWeight.w600,
+  //                                           fontSize: 13,
+  //                                           height: 1.3,
+  //                                           color: isOutOfStock ? Colors.grey : Colors.black,
+  //                                         ),
+  //                                       ),
+  //                                     ),
+  //                                   ),
+  //                                 ),
+  //
+  //                               ],
+  //                             );
+  //                           },
+  //                         ),
+  //                       ),
+  //
+  //                       const Divider(height: 6, thickness: 0.6),
+  //
+  //                       // 🟢 Price
+  //                       Expanded(
+  //                         flex: 2,
+  //                         child: FittedBox(
+  //                           child: Text(
+  //                             "৳${pack["price"] ?? ""}",
+  //                             style: TextStyle(
+  //                               fontWeight: FontWeight.bold,
+  //                               fontSize: 11,
+  //                               height: 1.3,
+  //                               color: isOutOfStock ? Colors.grey : bgColor,
+  //                               // color: isOutOfStock ? bgColor : bgColor,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //
+  //                 // 🔴 OUT OF STOCK BADGE (TOP-RIGHT)
+  //                 if (isOutOfStock)
+  //                   Positioned(
+  //                     right: 14,
+  //                     top: -8,
+  //                     // left: 4,
+  //                     // bottom: 4,
+  //                     child: Container(
+  //                       padding:
+  //                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+  //                       decoration: BoxDecoration(
+  //                         color: Colors.red,
+  //                         borderRadius: BorderRadius.circular(6),
+  //                       ),
+  //                       child: const Text(
+  //                         "Out of Stock",
+  //                         style: TextStyle(
+  //                           color: Colors.white,
+  //                           fontSize: 10,
+  //                           fontWeight: FontWeight.bold,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ),
+  //               ],
+  //             ),
+  //
+  //               // child: Stack(
+  //               //   clipBehavior: Clip.none, // badge overlap allow করবে
+  //               //   children: [
+  //               //     // 🌟 MAIN CARD
+  //               //     AnimatedContainer(
+  //               //       duration: const Duration(milliseconds: 180),
+  //               //       padding: const EdgeInsets.all(10),
+  //               //       decoration: BoxDecoration(
+  //               //         color: isOutOfStock
+  //               //             ? Colors.grey.shade200
+  //               //             : (isSelected ? bgColor.withOpacity(0.1) : Colors.white),
+  //               //         border: Border.all(
+  //               //           color: isOutOfStock
+  //               //               ? Colors.orange
+  //               //               : (isSelected ? bgColor : Colors.grey.shade300),
+  //               //           width: 1.3,
+  //               //         ),
+  //               //         borderRadius: BorderRadius.circular(12),
+  //               //       ),
+  //               //       child: Column(
+  //               //         crossAxisAlignment: CrossAxisAlignment.start,
+  //               //         children: [
+  //               //           Expanded(
+  //               //             child: Text(
+  //               //               pack["name"] ?? "",
+  //               //               maxLines: 2,
+  //               //               overflow: TextOverflow.ellipsis,
+  //               //               style: TextStyle(
+  //               //                 fontWeight: FontWeight.w600,
+  //               //                 fontSize: 14,
+  //               //                 color: isOutOfStock ? Colors.grey : Colors.black,
+  //               //               ),
+  //               //             ),
+  //               //           ),
+  //               //           const SizedBox(height: 6),
+  //               //           FittedBox(
+  //               //             child: Text(
+  //               //               "৳${pack["price"]}",
+  //               //               style: TextStyle(
+  //               //                 fontWeight: FontWeight.bold,
+  //               //                 color: isOutOfStock ? Colors.grey : bgColor,
+  //               //               ),
+  //               //             ),
+  //               //           ),
+  //               //         ],
+  //               //       ),
+  //               //     ),
+  //               //
+  //               //     // 🔥 BORDER-FOLLOWING BADGE (top-right, screenshot style)
+  //               //     if (isOutOfStock)
+  //               //       Positioned(
+  //               //         top: -10, // border overlap
+  //               //         // right: 50, // border radius অনুযায়ী perfect fit
+  //               //         child: Container(
+  //               //           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+  //               //           decoration: BoxDecoration(
+  //               //             color: Colors.orange.shade600,
+  //               //             borderRadius: BorderRadius.circular(20),
+  //               //             border: Border.all(
+  //               //               color: Colors.white,
+  //               //               width: 1.2, // border er sathe clean cut effect
+  //               //             ),
+  //               //           ),
+  //               //           child: const Text(
+  //               //             "Out of stock",
+  //               //             style: TextStyle(
+  //               //               color: Colors.white,
+  //               //               fontSize: 10,
+  //               //               fontWeight: FontWeight.bold,
+  //               //             ),
+  //               //           ),
+  //               //         ),
+  //               //       ),
+  //               //   ],
+  //               // )
+  //
+  //           );
+  //         },
+  //
+  //
+  //       );
+  //     },
+  //   );
+  //
+  //
+  //   ///////////////////////////////////
+  //
+  // }
 
-
+  // Widget buildRechargeGrid() {
+  //   final siteProvider = Provider.of<SiteProvider>(context);
+  //   final site = siteProvider.siteData;
+  //
+  //   Color bgColor = Colors.transparent;
+  //   try {
+  //     bgColor = Color(int.parse("0xff${site?.color}"));
+  //   } catch (_) {}
+  //
+  //   // Group items by rows (2 items per row)
+  //   List<List<dynamic>> rows = [];
+  //   for (int i = 0; i < rechargePacks.length; i += 2) {
+  //     List<dynamic> row = [];
+  //     if (i < rechargePacks.length) row.add(rechargePacks[i]);
+  //     if (i + 1 < rechargePacks.length) row.add(rechargePacks[i + 1]);
+  //     rows.add(row);
+  //   }
+  //
+  //   return Column(
+  //     children: rows.map((rowItems) {
+  //       // Calculate max height needed for this row
+  //       double maxHeight = _calculateRowHeight(rowItems);
+  //
+  //       return Container(
+  //         margin: const EdgeInsets.only(bottom: 11),
+  //         child: Row(
+  //           children: rowItems.map((pack) {
+  //             int index = rechargePacks.indexOf(pack);
+  //             bool isSelected = selectedPackIndex == index;
+  //             bool isOutOfStock = pack["in_stock"] == 0;
+  //
+  //             return Expanded(
+  //               child: Container(
+  //                 height: maxHeight, // Same height for all items in this row
+  //                 margin: const EdgeInsets.symmetric(horizontal: 4),
+  //                 child: GestureDetector(
+  //                   onTap: isOutOfStock
+  //                       ? null
+  //                       : () {
+  //                     setState(() {
+  //                       selectedPackIndex = index;
+  //                       selectedPackagePrice = _convertToDouble(pack["price"]);
+  //                       selectedPackageName = pack["name"];
+  //                       selectedPackageId = pack["id"];
+  //                     });
+  //                   },
+  //                   child: Stack(
+  //                     clipBehavior: Clip.none,
+  //                     children: [
+  //                       // 🌟 MAIN CARD
+  //                       AnimatedContainer(
+  //                         duration: const Duration(milliseconds: 180),
+  //                         padding: const EdgeInsets.all(8),
+  //                         decoration: BoxDecoration(
+  //                           color: isOutOfStock
+  //                               ? Colors.grey.shade300
+  //                               : (isSelected ? bgColor.withOpacity(0.1) : Colors.white),
+  //                           border: Border.all(
+  //                             color: isOutOfStock
+  //                                 ? Colors.grey
+  //                                 : (isSelected ? bgColor : Colors.grey.shade400),
+  //                             width: 1.2,
+  //                           ),
+  //                           borderRadius: BorderRadius.circular(8),
+  //                         ),
+  //                         child: Column(
+  //                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                           children: [
+  //                             // 🔵 Name - Flexible space
+  //                             Expanded(
+  //                               child: Container(
+  //                                 width: double.infinity,
+  //                                 alignment: Alignment.center,
+  //                                 child: Text(
+  //                                   pack["name"] ?? "",
+  //                                   textAlign: TextAlign.center,
+  //                                   maxLines: 3,
+  //                                   overflow: TextOverflow.ellipsis,
+  //                                   style: TextStyle(
+  //                                     fontWeight: FontWeight.w600,
+  //                                     fontSize: _getOptimalFontSize(pack["name"] ?? ""),
+  //                                     height: 1.2,
+  //                                     color: isOutOfStock ? Colors.grey : Colors.black,
+  //                                   ),
+  //                                 ),
+  //                               ),
+  //                             ),
+  //
+  //                             // 🔷 Divider
+  //                             Divider(
+  //                               height: 1,
+  //                               thickness: 0.8,
+  //                               color: isOutOfStock ? Colors.grey : Colors.grey.shade400,
+  //                             ),
+  //
+  //                             const SizedBox(height: 4),
+  //
+  //                             // 🟢 Price
+  //                             Container(
+  //                               height: 18,
+  //                               alignment: Alignment.center,
+  //                               child: FittedBox(
+  //                                 child: Text(
+  //                                   "৳${pack["price"] ?? ""}",
+  //                                   style: TextStyle(
+  //                                     fontWeight: FontWeight.bold,
+  //                                     color: isOutOfStock ? Colors.grey : bgColor,
+  //                                   ),
+  //                                 ),
+  //                               ),
+  //                             ),
+  //                           ],
+  //                         ),
+  //                       ),
+  //
+  //                       // 🔴 OUT OF STOCK BADGE
+  //                       if (isOutOfStock)
+  //                         Positioned(
+  //                           right: 8,
+  //                           top: -6,
+  //                           child: Container(
+  //                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+  //                             decoration: BoxDecoration(
+  //                               color: Colors.red,
+  //                               borderRadius: BorderRadius.circular(6),
+  //                             ),
+  //                             child: const Text(
+  //                               "Out of Stock",
+  //                               style: TextStyle(
+  //                                 color: Colors.white,
+  //                                 fontSize: 9,
+  //                                 fontWeight: FontWeight.bold,
+  //                               ),
+  //                             ),
+  //                           ),
+  //                         ),
+  //                     ],
+  //                   ),
+  //                 ),
+  //               ),
+  //             );
+  //           }).toList(),
+  //         ),
+  //       );
+  //     }).toList(),
+  //   );
+  // }
 
   Widget buildRechargeGrid() {
     final siteProvider = Provider.of<SiteProvider>(context);
     final site = siteProvider.siteData;
 
-
-    // 🔹 Dynamic background color
-
-    // Color bgColor = Colors.lightBlueAccent;
     Color bgColor = Colors.transparent;
     try {
       bgColor = Color(int.parse("0xff${site?.color}"));
     } catch (_) {}
 
+    // Group items by rows (2 items per row)
+    List<List<dynamic>> rows = [];
+    for (int i = 0; i < rechargePacks.length; i += 2) {
+      List<dynamic> row = [];
+      if (i < rechargePacks.length) row.add(rechargePacks[i]);
+      if (i + 1 < rechargePacks.length) row.add(rechargePacks[i + 1]);
+      rows.add(row);
+    }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        double aspectRatio;
+    return Column(
+      children:
+      rows.map((rowItems) {
+        // Calculate max height needed for this row
+        double maxHeight = _calculateRowHeight(rowItems);
 
-        if (constraints.maxWidth < 360) {
-          aspectRatio = 2.9; // আরও ছোট
-        } else if (constraints.maxWidth < 480) {
-          aspectRatio = 1.25;
-        } else {
-          aspectRatio = 1.45;
-        }
+        return Container(
+          margin: const EdgeInsets.only(bottom: 11),
+          child: Row(
+            children: [
+              // ✅ প্রথম item (বাম পাশের)
+              if (rowItems.isNotEmpty)
+                _buildPackageItem(rowItems[0], 0, maxHeight, bgColor),
 
-        return GridView.builder(
-          itemCount: rechargePacks.length,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: aspectRatio,
-          ),
-          itemBuilder: (context, index) {
-            bool isSelected = selectedPackIndex == index;
-            final pack = rechargePacks[index];
+              const SizedBox(width: 8),
+              // Spacing between items
 
-            return GestureDetector(
-              onTap: () {
-                setState(() {
-                  selectedPackIndex = index;
-                  selectedPackagePrice = _convertToDouble(pack["price"]);
-                  selectedPackageName = pack["name"];
-                  selectedPackageId = pack["id"];
-                });
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: isSelected ? bgColor.withOpacity(0.1) : Colors.white,
-                  border: Border.all(
-                    color: isSelected ? bgColor : Colors.grey.shade400,
-                    width: 1.1,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
+              // ✅ দ্বিতীয় item (ডান পাশের) - থাকলে show করবে, না থাকলে খালি জায়গা
+              if (rowItems.length > 1)
+                _buildPackageItem(rowItems[1], 1, maxHeight, bgColor)
+              else
+                Container(
+                  width:
+                  (MediaQuery
+                      .of(context)
+                      .size
+                      .width - 48) /
+                      2, // ✅ Exactly half width
+                  height: maxHeight,
                 ),
-                child: Column(
-                  children: [
-                    // 🔵 Title gets more space (expanded)
-                    Expanded(
-                      flex: 4,
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // ✅ Helper method to build individual package item
+  Widget _buildPackageItem(dynamic pack,
+      int position,
+      double maxHeight,
+      Color bgColor,) {
+    int index = rechargePacks.indexOf(pack);
+    bool isSelected = selectedPackIndex == index;
+    bool isOutOfStock = pack["in_stock"] == 0;
+
+    return Container(
+      width: (MediaQuery
+          .of(context)
+          .size
+          .width - 48) / 2,
+      // ✅ Exactly half width
+      height: maxHeight,
+      margin: const EdgeInsets.symmetric(horizontal: 0),
+      // ✅ No horizontal margin
+      child: GestureDetector(
+        onTap:
+        isOutOfStock
+            ? null
+            : () {
+          setState(() {
+            selectedPackIndex = index;
+            selectedPackagePrice = _convertToDouble(pack["price"]);
+            selectedPackageName = pack["name"];
+            selectedPackageId = pack["id"];
+          });
+        },
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // 🌟 MAIN CARD
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color:
+                isOutOfStock
+                    ? Colors.grey.shade300
+                    : (isSelected
+                    ? bgColor.withOpacity(0.1)
+                    : Colors.white),
+                border: Border.all(
+                  color:
+                  isOutOfStock
+                      ? Colors.grey
+                      : (isSelected ? bgColor : Colors.grey.shade400),
+                  width: 1.2,
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // 🔵 Name - Flexible space
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      alignment: Alignment.center,
                       child: Text(
                         pack["name"] ?? "",
                         textAlign: TextAlign.center,
                         maxLines: 3,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          fontSize: 12.5,
-                          height: 1.3,
+                          fontSize: _getOptimalFontSize(pack["name"] ?? ""),
+                          height: 1.2,
+                          color: isOutOfStock ? Colors.grey : Colors.black,
                         ),
                       ),
                     ),
+                  ),
 
-                    const Divider(height: 6, thickness: 0.6),
+                  // 🔷 Divider
+                  Divider(
+                    height: 1,
+                    thickness: 0.8,
+                    color: isOutOfStock ? Colors.grey : Colors.grey.shade400,
+                  ),
 
-                    // 🟢 Price gets very small area (compact)
-                    Expanded(
-                      flex: 2,
-                      child: FittedBox(
-                        child: Text(
-                          "৳${pack["price"] ?? ""}",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            height: 1,
-                            color: bgColor,
-                          ),
+                  const SizedBox(height: 4),
+
+                  // 🟢 Price
+                  Container(
+                    height: 18,
+                    alignment: Alignment.center,
+                    child: FittedBox(
+                      child: Text(
+                        "৳${pack["price"] ?? ""}",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: isOutOfStock ? Colors.grey : bgColor,
                         ),
                       ),
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+
+            // 🔴 OUT OF STOCK BADGE
+            if (isOutOfStock)
+              Positioned(
+                right: 20,
+                top: -6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    "Out of Stock",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
-            );
-          },
-        );
-      },
+          ],
+        ),
+      ),
     );
-
-
-    ///////////////////////////////////
-
   }
 
+  // Calculate row height based on the tallest content in the row
+  double _calculateRowHeight(List<dynamic> rowItems) {
+    double maxHeight = 40.0; // Minimum height
 
+    for (var pack in rowItems) {
+      String name = pack["name"] ?? "";
+      int lineCount = (name.length / 15).ceil(); // Approximate lines needed
+      double estimatedHeight =
+          60.0 + (lineCount * 12.0); // Base height + line height
+
+      if (estimatedHeight > maxHeight) {
+        maxHeight = estimatedHeight;
+      }
+    }
+
+    return maxHeight;
+  }
+
+  // Optimal font size based on text length
+  double _getOptimalFontSize(String text) {
+    // if (text.length <= 12) return 10.0;
+    // if (text.length <= 18) return 10.0;
+    // if (text.length <= 24) return 10.0;
+    // if (text.length <= 30) return 10.0;
+    return 12.0;
+  }
 
   /////////////////////////////////////
 
@@ -1022,17 +1991,23 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
     final logoUrl = "$backendUrl/images/${site?.logo}";
     final userProvider = Provider.of<UserProvider>(context);
     final profileProvider = Provider.of<UserProfileProvider>(context);
-    final profile = profileProvider.profileData?.data; // ✅ Dynamic wallet balance
+    // final profileProvider = Provider.of<UserProfileProvider>(context, listen: false,).fetchUserProfile();
+    final profile =
+        profileProvider.profileData?.data; // ✅ Dynamic wallet balance
+    // final profile = profileProvider.profileData?.data; // ✅ Dynamic wallet balance
     final double walletBalance = _convertToDouble(profile?.wallet);
-    print("*********dynamic wallet balance= ${walletBalance}***********");
+    print("*********dynamic wallet balance=? ${walletBalance}***********");
 
     final user = userProvider;
     // final selectedPack = rechargePacks[selectedPackIndex!];
     // final double selected_package_price = _convertToDouble(selectedPack["price"]);
 
     final bool isLoggedIn = user.isLoggedIn;
+
     // final bool canBuy = isLoggedIn &&
-    //     ((selectedPayment == "RRR Bazar Wallet" && walletBalance > (selectedPackagePrice ?? 0) ) ||
+    //     // ((selectedPayment == "RRR Bazar Wallet" && walletBalance > (selectedPackagePrice ?? 0) ) ||
+    //     ((selectedPayment == walletName && walletBalance > (selectedPackagePrice ?? 0) ) ||
+    //     // ((selectedPayment == "RRR Bazar Wallet" && walletBalance > (selected_package_price ?? 0) ) ||
     //         selectedPayment == "Auto Payment");
 
     // ✅ canBuy কন্ডিশন
@@ -1040,7 +2015,7 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
         isLoggedIn &&
             (selectedPayment ==
                 "Auto Payment" || // Auto Payment এ সবসময় buy করা যাবে
-                (selectedPayment == "RRR Bazar Wallet" &&
+                (selectedPayment == walletName &&
                     selectedPackagePrice !=
                         null && // প্রথমে চেক করছি price select হয়েছে কিনা
                     walletBalance >=
@@ -1075,8 +2050,6 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
 
           setState(() {}); // UI refresh
         },
-
-
 
         // child: SingleChildScrollView(
         //   physics: const AlwaysScrollableScrollPhysics(),
@@ -1463,31 +2436,25 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
         //   ),
         //
         // ),
-
-
         child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight,
-                ),
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     // 🟦 All main content with padding
                     Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+
                         // children: [
                         //   // 👉 আপনার সমস্ত content এখানেই থাকবে
                         //   // warning, grid, buttons, form etc.
                         // ],
-
-
                         children: [
                           // ⚠️ যদি user লগইন না করে থাকে তাহলে warning box দেখাও
                           if (!isLoggedIn)
@@ -1502,7 +2469,11 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.warning, color: Colors.orange, size: 30),
+                                  const Icon(
+                                    Icons.warning,
+                                    color: Colors.orange,
+                                    size: 30,
+                                  ),
                                   const SizedBox(width: 10),
                                   const Expanded(
                                     child: Text(
@@ -1549,7 +2520,10 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.warning, color: Colors.orange),
+                                  const Icon(
+                                    Icons.warning,
+                                    color: Colors.orange,
+                                  ),
                                   const SizedBox(width: 8),
                                   const Expanded(
                                     child: Text(
@@ -1561,18 +2535,25 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                                     onPressed: () {
                                       Navigator.push(
                                         context,
-                                        MaterialPageRoute(builder: (_) => AddMoneyPage()),
+                                        MaterialPageRoute(
+                                          builder: (_) => AddMoneyPage(),
+                                        ),
                                       );
                                     },
                                     // child: const Text("Add Money"),
                                     // child: const Text("Add Money",style: TextStyle(color: Colors.black87),),
-                                    child: Text("Add Money",style: TextStyle(color:bgColor),),
+                                    child: Text(
+                                      "Add Money",
+                                      style: TextStyle(color: bgColor),
+                                    ),
                                   ),
                                 ],
                               ),
                             ),
 
-                          Center(child: Image.network(widget.image, width: 100)),
+                          Center(
+                            child: Image.network(widget.image, width: 100),
+                          ),
                           const SizedBox(height: 10),
                           Center(
                             child: Text(
@@ -1586,61 +2567,89 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
 
                           const SizedBox(height: 20),
 
-                          Container(
-                            decoration: BoxDecoration(
-                              // color: Colors.lightBlueAccent,
-                              color: bgColor,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 14,
-                                  backgroundColor: Colors.transparent,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 2),
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "1",
-                                      style: TextStyle(
+                          ///////////////// account info /////////////
+
+                          // ✅ শুধুমাত্র UniPin Voucher না হলে Account Info section দেখাবে
+                          if (!widget.title.contains("UniPin Voucher")) ...[
+                            Container(
+                              decoration: BoxDecoration(
+                                // color: Colors.lightBlueAccent,
+                                color: bgColor,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 14,
+                                    backgroundColor: Colors.transparent,
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
                                           color: Colors.white,
-                                          fontWeight: FontWeight.bold),
+                                          width: 2,
+                                        ),
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Text(
+                                        "1",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
                                   ),
-                                ),
-                                SizedBox(width: 10),
-                                Text(
-                                  "Account Info",
-                                  style: TextStyle(
+                                  SizedBox(width: 10),
+                                  Text(
+                                    "Account Info",
+                                    style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 16,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                Spacer(),
-                              ],
-                            ),
-                          ),
-
-                          SizedBox(height: 12),
-
-
-
-                          TextField(
-                            controller: playerIdController,
-                            decoration: InputDecoration(
-                              labelText: "Enter Player ID",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Spacer(),
+                                ],
                               ),
                             ),
-                            enabled: isLoggedIn, // ❌ লগইন না থাকলে টাইপ করা যাবে না
-                          ),
 
-                          const SizedBox(height: 20),
+                            SizedBox(height: 12),
+
+                            // TextField(
+                            //   controller: playerIdController,
+                            //   decoration: InputDecoration(
+                            //     labelText: "Enter Player ID",
+                            //     border: OutlineInputBorder(
+                            //       borderRadius: BorderRadius.circular(10),
+                            //     ),
+                            //   ),
+                            //   enabled: isLoggedIn, // ❌ লগইন না থাকলে টাইপ করা যাবে না
+                            // ),
+                            TextField(
+                              controller: playerIdController,
+                              decoration: InputDecoration(
+                                labelText: "Enter Player ID",
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              enabled: isLoggedIn,
+                              // লগইন না থাকলে টাইপ করা যাবে না
+                              keyboardType: TextInputType.number,
+                              // 🔥 Number keyboard
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                // 🔥 Only digits allowed
+                              ],
+                            ),
+
+                            const SizedBox(height: 20),
+                          ],
 
                           //////////////////recharge pack ////////////////
 
@@ -1648,40 +2657,52 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                           //   "Select Recharge Pack",
                           //   style: TextStyle(fontWeight: FontWeight.bold),
                           // ),
-
                           Container(
                             decoration: BoxDecoration(
                               // color: Colors.lightBlueAccent,
                               color: bgColor,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             child: Row(
                               children: [
-                                CircleAvatar(
-                                  radius: 14,
-                                  backgroundColor: Colors.transparent,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 2),
+                                // ✅ শুধুমাত্র UniPin Voucher না হলে Account Info section দেখাবে
+                                if (!widget.title.contains("UniPin Voucher"))
+                                  ...[
+                                    CircleAvatar(
+                                      radius: 14,
+                                      backgroundColor: Colors.transparent,
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.white,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          "2",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "2",
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ),
+
+                                  ],
                                 SizedBox(width: 10),
                                 Text(
                                   "Select Recharge Pack",
                                   style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold),
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 Spacer(),
                               ],
@@ -1690,23 +2711,17 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
 
                           SizedBox(height: 12),
 
-
-
-
                           buildRechargeGrid(),
 
                           /////////////////////////////////////////////////////
-
                           const SizedBox(height: 20),
 
                           //////////////////////// payment part/////////////
-
                           const Text(
                             "Select Payment Method",
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 10),
-
 
                           // Row(
                           //   mainAxisAlignment: MainAxisAlignment.center,
@@ -1716,12 +2731,10 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                           //   ],
 
                           // ),
-
                           Row(
                             children: [
                               Expanded(
-                                child:
-                                paymentOption(
+                                child: paymentOption(
                                   // "RRR Bazar Wallet",
                                   // "assets/wallet.png",
                                   ///////////////////////
@@ -1751,10 +2764,8 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                                   ///////////////////////////////////
                                   // "Rangvo wallet",
                                   // "assets/walletimage/rangvo_wallet.png",
-
                                   walletName,
                                   logoUrl,
-
                                 ),
                               ),
                               Expanded(
@@ -1772,13 +2783,15 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                           Row(
                             children: [
                               // ✅ শুধুমাত্র লগইনকৃত ইউজার হলে Add Money দেখাও
-                              if (isLoggedIn && selectedPayment == "RRR Bazar Wallet")
+                              if (isLoggedIn && selectedPayment == walletName)
                                 Expanded(
                                   child: ElevatedButton.icon(
                                     onPressed: () {
                                       Navigator.push(
                                         context,
-                                        MaterialPageRoute(builder: (_) => AddMoneyPage()),
+                                        MaterialPageRoute(
+                                          builder: (_) => AddMoneyPage(),
+                                        ),
                                       );
                                     },
                                     // icon: const Icon(Icons.add, color: Colors.blue),
@@ -1792,7 +2805,10 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                                       ),
                                     ),
                                     style: ElevatedButton.styleFrom(
-                                      minimumSize: const Size(double.infinity, 50),
+                                      minimumSize: const Size(
+                                        double.infinity,
+                                        50,
+                                      ),
                                       backgroundColor: Colors.white,
                                       side: BorderSide(
                                         // color: Colors.blue,
@@ -1800,7 +2816,8 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                                         width: 1.5,
                                       ),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(
+                                            8),
                                       ),
                                       elevation: 0,
                                     ),
@@ -1815,7 +2832,10 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                                   opacity: canBuy ? 1 : 0.5,
                                   child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      minimumSize: const Size(double.infinity, 50),
+                                      minimumSize: const Size(
+                                        double.infinity,
+                                        50,
+                                      ),
                                       backgroundColor:
                                       // canBuy ? Colors.blue : Colors.grey[400],
                                       canBuy ? bgColor : Colors.grey[400],
@@ -1825,14 +2845,18 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                                         width: 1.2,
                                       ),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(
+                                            8),
                                       ),
                                       elevation: canBuy ? 2 : 0,
                                     ),
                                     onPressed: canBuy ? _confirmOrder : null,
                                     child: const Text(
                                       "Buy Now",
-                                      style: TextStyle(fontSize: 18, color: Colors.white),
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -1843,26 +2867,20 @@ class _OrderSuggestionPageState extends State<OrderSuggestionPage> {
                           const SizedBox(height: 30),
                           // CustomFooter(),
                         ],
-
-
-
                       ),
                     ),
 
                     // 🔥 Push footer to bottom even if content is small
-                    const SizedBox(height: 20),  // Footer উপরে উঠে না আসার জন্য
-
+                    const SizedBox(height: 20),
+                    // Footer উপরে উঠে না আসার জন্য
                     // 🟥 Footer without padding
                     CustomFooter(),
                   ],
                 ),
-
               ),
             );
           },
         ),
-
-
       ),
     );
   }

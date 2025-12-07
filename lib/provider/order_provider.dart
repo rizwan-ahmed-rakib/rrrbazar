@@ -10,6 +10,15 @@ class OrderProvider extends ChangeNotifier {
   bool isLoading = false;
   bool hasError = false;
 
+  void printLong(Object data) {
+    final text = data.toString();
+    const chunk = 800;
+    for (int i = 0; i < text.length; i += chunk) {
+      print(text.substring(i, i + chunk > text.length ? text.length : i + chunk));
+    }
+  }
+
+
   Future<void> fetchOrders() async {
     isLoading = true;
     hasError = false;
@@ -43,6 +52,18 @@ class OrderProvider extends ChangeNotifier {
 
         orders = dataList.map((item) => OrderModel.fromJson(item)).toList();
         print("✅ Order লোড সফল! ${orders.length} টি ডাটা পাওয়া গেছে");
+        // 🔥 Raw response print (Full)
+        print("📌 Full JSON Response:");
+        // printLong(jsonResponse);
+        printLong(dataList.first);
+        print("📌 📌 Full JSON Response end:");
+
+
+        // 🔥 Only dataList print (Full)
+
+        // print("📌 DataList:");
+        // printLong(dataList);
+
       } else {
         hasError = true;
         print("❌ সার্ভার ত্রুটি: ${response.statusCode}");

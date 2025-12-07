@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 
@@ -328,6 +329,10 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                     ),
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      // 🔥 Only digits allowed
+                                    ],
                                   ),
                                   SizedBox(height: 12),
                                   ElevatedButton(
@@ -383,11 +388,20 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
                                           headers: {
                                             "Content-Type": "application/json",
                                             "Authorization": "Bearer $token",
+                                            "x-client-origin": ClientOrigin, // ✅ এখানে ব্যবহার হচ্ছে
+                                            // "x-client-origin": "https://zsshopbd.com", // ✅ এখানে ব্যবহার হচ্ছে
                                           },
                                           body: jsonEncode(body),
                                         );
 
                                         Navigator.pop(context); // 🔹 Loading বন্ধ করো
+
+                                        print(
+                                          "🔵 API Response Status: ${response.statusCode}",
+                                        );
+                                        // debugPrint("🔵 API Response Body: ${response.body}", wrapWidth: 2024);
+                                        debugPrint("🔵 API Response Body:🔵");
+                                        debugPrint(response.body);
 
                                         print("payment gateway url= $url 📦 Sending Order: $body");
 
@@ -396,12 +410,29 @@ class _AddMoneyPageState extends State<AddMoneyPage> {
                                           final data = jsonDecode(response.body);
                                           final paymentUrl = data['data']?['payment_url'];
 
+                                          //////////////////////////////////
+
+                                          // Navigator.push(
+                                          //   context,
+                                          //   MaterialPageRoute(
+                                          //     builder: (_) => PaymentWebView(paymentUrl: paymentUrl),
+                                          //   ),
+                                          // );
+
+                                          ////////////////////////////
+
+                                          // Manual Payment এর জন্য
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (_) => PaymentWebView(paymentUrl: paymentUrl),
+                                              builder: (context) => PaymentWebView(
+                                                paymentUrl: paymentUrl,
+                                                orderType: "manual_payment", // ✅ Manual Payment
+                                              ),
                                             ),
                                           );
+
+                                          ////////////////////////////
 
                                           // ✅ যদি backend থেকে payment_url ফেরত আসে
 

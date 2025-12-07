@@ -8,6 +8,8 @@ class OrderModel {
   final double amount;
   final String status;
   final TopupProduct? topupProduct;
+  final String? voucher;   // 🔥 Voucher nullable
+
 
   OrderModel({
     required this.id,
@@ -18,6 +20,8 @@ class OrderModel {
     required this.amount,
     required this.status,
     this.topupProduct,
+    this.voucher,
+
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -34,6 +38,8 @@ class OrderModel {
       topupProduct: json['TopupProduct'] != null
           ? TopupProduct.fromJson(json['TopupProduct'])
           : null,
+      voucher: json["Voucher"] != null ? json["Voucher"]["data"] : null,
+
     );
   }
 }

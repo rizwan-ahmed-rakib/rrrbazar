@@ -209,234 +209,170 @@ class _RegisterScreenState extends State<RegisterScreen> {
       bgColor = Color(int.parse("0xff${site?.color}"));
     } catch (_) {}
 
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushReplacementNamed(context, '/home');
+        return false;
+      },
+      child: Scaffold(
+          backgroundColor: Colors.white,
 
-      appBar: CustomAppBar( logoUrl: logoUrl, isLoggedIn: user.isLoggedIn,),
+          appBar: CustomAppBar( logoUrl: logoUrl, isLoggedIn: user.isLoggedIn,),
 
-        // ✅ পুরো স্ক্রলযোগ্য পেজ + নিচে footer থাকবে
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            Center(
-              child: Container(
-                width: width < 700 ? width * 0.9 : 650,
-                padding: const EdgeInsets.all(25),
-                margin: const EdgeInsets.only(bottom: 40),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 15,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Register",
-                      style: GoogleFonts.poppins(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 25),
-
-                    // Google Sign-In Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 45,
-                      child: OutlinedButton.icon(
-                        icon: Image.network(
-                          "https://img.icons8.com/color/48/000000/google-logo.png",
-                          height: 22,
+          // ✅ পুরো স্ক্রলযোগ্য পেজ + নিচে footer থাকবে
+          body: SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 150),
+                Center(
+                  child: Container(
+                    width: width < 700 ? width * 0.9 : 650,
+                    padding: const EdgeInsets.all(25),
+                    margin: const EdgeInsets.only(bottom: 40),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 15,
+                          offset: const Offset(0, 5),
                         ),
-                        label: const Text(
-                          "Sign up with Google",
-                          style: TextStyle(fontSize: 15, color: Colors.black87),
-                        ),
-                        onPressed: _handleGoogleSignUp,
-                        style: OutlinedButton.styleFrom(
-                          // side: const BorderSide(color: Colors.grey),
-                          side: BorderSide(color:bgColor),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Register",
+                          style: GoogleFonts.poppins(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
                           ),
-                          backgroundColor: Colors.white,
                         ),
-                      ),
+                        const SizedBox(height: 25),
+
+                        // Google Sign-In Button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 45,
+                          child: OutlinedButton.icon(
+                            icon: Image.network(
+                              "https://img.icons8.com/color/48/000000/google-logo.png",
+                              height: 22,
+                            ),
+                            label: const Text(
+                              "Sign up with Google",
+                              style: TextStyle(fontSize: 15, color: Colors.black87),
+                            ),
+                            onPressed: _handleGoogleSignUp,
+                            style: OutlinedButton.styleFrom(
+                              // side: const BorderSide(color: Colors.grey),
+                              side: BorderSide(color:bgColor),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              backgroundColor: Colors.white,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 25),
+
+                      ],
                     ),
-
-                    const SizedBox(height: 25),
-
-                    // OR Divider
-                    // Row(
-                    //   children: [
-                    //     Expanded(
-                    //         child: Divider(
-                    //             color: Colors.grey[300], thickness: 1.3)),
-                    //     const Padding(
-                    //       padding: EdgeInsets.symmetric(horizontal: 8),
-                    //       child:
-                    //       Text("Or", style: TextStyle(color: Colors.black54)),
-                    //     ),
-                    //     Expanded(
-                    //         child: Divider(
-                    //             color: Colors.grey[300], thickness: 1.3)),
-                    //   ],
-                    // ),
-                    //
-                    // const SizedBox(height: 25),
-                    //
-                    // // Username & Phone
-                    // LayoutBuilder(
-                    //   builder: (context, constraints) {
-                    //     if (constraints.maxWidth < 500) {
-                    //       return Column(
-                    //         children: [
-                    //           _buildTextField("Username", _usernameController),
-                    //           const SizedBox(height: 15),
-                    //           _buildTextField("Phone", _phoneController),
-                    //         ],
-                    //       );
-                    //     } else {
-                    //       return Row(
-                    //         children: [
-                    //           Expanded(
-                    //               child: _buildTextField(
-                    //                   "Username", _usernameController)),
-                    //           const SizedBox(width: 10),
-                    //           Expanded(
-                    //               child: _buildTextField(
-                    //                   "Phone", _phoneController)),
-                    //         ],
-                    //       );
-                    //     }
-                    //   },
-                    // ),
-                    //
-                    // const SizedBox(height: 15),
-                    //
-                    // _buildTextField("Email", _emailController),
-                    //
-                    // const SizedBox(height: 15),
-                    //
-                    // // Password Fields
-                    // LayoutBuilder(
-                    //   builder: (context, constraints) {
-                    //     if (constraints.maxWidth < 500) {
-                    //       return Column(
-                    //         children: [
-                    //           _buildPasswordField(
-                    //             "Password",
-                    //             _passwordController,
-                    //             _showPassword,
-                    //                 () => setState(
-                    //                     () => _showPassword = !_showPassword),
-                    //           ),
-                    //           const SizedBox(height: 15),
-                    //           _buildPasswordField(
-                    //             "Confirm Password",
-                    //             _confirmPasswordController,
-                    //             _showConfirmPassword,
-                    //                 () => setState(() => _showConfirmPassword =
-                    //             !_showConfirmPassword),
-                    //           ),
-                    //         ],
-                    //       );
-                    //     } else {
-                    //       return Row(
-                    //         children: [
-                    //           Expanded(
-                    //             child: _buildPasswordField(
-                    //               "Password",
-                    //               _passwordController,
-                    //               _showPassword,
-                    //                   () => setState(() =>
-                    //               _showPassword = !_showPassword),
-                    //             ),
-                    //           ),
-                    //           const SizedBox(width: 10),
-                    //           Expanded(
-                    //             child: _buildPasswordField(
-                    //               "Confirm Password",
-                    //               _confirmPasswordController,
-                    //               _showConfirmPassword,
-                    //                   () => setState(() => _showConfirmPassword =
-                    //               !_showConfirmPassword),
-                    //             ),
-                    //           ),
-                    //         ],
-                    //       );
-                    //     }
-                    //   },
-                    // ),
-                    //
-                    // const SizedBox(height: 25),
-                    //
-                    // // Create Account Button
-                    // SizedBox(
-                    //   width: double.infinity,
-                    //   height: 50,
-                    //   child: ElevatedButton(
-                    //     onPressed: () {
-                    //       print("Create Account clicked");
-                    //     },
-                    //     style: ElevatedButton.styleFrom(
-                    //       backgroundColor: Colors.lightBlueAccent,
-                    //       shape: RoundedRectangleBorder(
-                    //         borderRadius: BorderRadius.circular(10),
-                    //       ),
-                    //     ),
-                    //     child: const Text(
-                    //       "Create Account",
-                    //       style: TextStyle(fontSize: 16, color: Colors.white),
-                    //     ),
-                    //   ),
-                    // ),
-                    //
-                    // const SizedBox(height: 20),
-                    //
-                    // Wrap(
-                    //   alignment: WrapAlignment.center,
-                    //   children: [
-                    //     const Text("Have an account? "),
-                    //     GestureDetector(
-                    //       onTap: () {
-                    //         Navigator.push(
-                    //           context,
-                    //           MaterialPageRoute(
-                    //               builder: (context) => const LoginScreen()),
-                    //         );
-                    //       },
-                    //       child: const Text(
-                    //         "Login here",
-                    //         style: TextStyle(
-                    //           color: Colors.blueAccent,
-                    //           fontWeight: FontWeight.w500,
-                    //         ),
-                    //       ),
-                    //     ),
-                    //   ],
-                    // ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
 
-            // ✅ এখন Footer scroll এর অংশ, fixed না
-            //  CustomFooter(),
-          ],
-        ),
+                // ✅ এখন Footer scroll এর অংশ, fixed না
+                //  CustomFooter(),
+              ],
+            ),
+          ),
+          bottomNavigationBar: CustomFooter()
       ),
-      bottomNavigationBar: CustomFooter()
     );
+
+
+    // return Scaffold(
+    //   backgroundColor: Colors.white,
+    //
+    //   appBar: CustomAppBar( logoUrl: logoUrl, isLoggedIn: user.isLoggedIn,),
+    //
+    //     // ✅ পুরো স্ক্রলযোগ্য পেজ + নিচে footer থাকবে
+    //   body: SingleChildScrollView(
+    //     child: Column(
+    //       children: [
+    //         const SizedBox(height: 150),
+    //         Center(
+    //           child: Container(
+    //             width: width < 700 ? width * 0.9 : 650,
+    //             padding: const EdgeInsets.all(25),
+    //             margin: const EdgeInsets.only(bottom: 40),
+    //             decoration: BoxDecoration(
+    //               color: Colors.white,
+    //               borderRadius: BorderRadius.circular(18),
+    //               boxShadow: [
+    //                 BoxShadow(
+    //                   color: Colors.black12,
+    //                   blurRadius: 15,
+    //                   offset: const Offset(0, 5),
+    //                 ),
+    //               ],
+    //             ),
+    //             child: Column(
+    //               crossAxisAlignment: CrossAxisAlignment.center,
+    //               children: [
+    //                 Text(
+    //                   "Register",
+    //                   style: GoogleFonts.poppins(
+    //                     fontSize: 28,
+    //                     fontWeight: FontWeight.w600,
+    //                     color: Colors.black87,
+    //                   ),
+    //                 ),
+    //                 const SizedBox(height: 25),
+    //
+    //                 // Google Sign-In Button
+    //                 SizedBox(
+    //                   width: double.infinity,
+    //                   height: 45,
+    //                   child: OutlinedButton.icon(
+    //                     icon: Image.network(
+    //                       "https://img.icons8.com/color/48/000000/google-logo.png",
+    //                       height: 22,
+    //                     ),
+    //                     label: const Text(
+    //                       "Sign up with Google",
+    //                       style: TextStyle(fontSize: 15, color: Colors.black87),
+    //                     ),
+    //                     onPressed: _handleGoogleSignUp,
+    //                     style: OutlinedButton.styleFrom(
+    //                       // side: const BorderSide(color: Colors.grey),
+    //                       side: BorderSide(color:bgColor),
+    //                       shape: RoundedRectangleBorder(
+    //                         borderRadius: BorderRadius.circular(30),
+    //                       ),
+    //                       backgroundColor: Colors.white,
+    //                     ),
+    //                   ),
+    //                 ),
+    //
+    //                 const SizedBox(height: 25),
+    //
+    //               ],
+    //             ),
+    //           ),
+    //         ),
+    //
+    //         // ✅ এখন Footer scroll এর অংশ, fixed না
+    //         //  CustomFooter(),
+    //       ],
+    //     ),
+    //   ),
+    //   bottomNavigationBar: CustomFooter()
+    // );
   }
 
   Widget _buildTextField(String label, TextEditingController controller) {

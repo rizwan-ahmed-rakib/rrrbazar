@@ -357,7 +357,7 @@ android {
     productFlavors {
         create("cobra") {
             dimension = "app"
-            applicationId = "com.cobratopup.app"
+            applicationId = "com.cobratopups.app"
             resValue("string", "app_name", "Cobra TopUp")
             manifestPlaceholders["appAuthRedirectScheme"] =
                 "com.googleusercontent.apps.895753625041-u5rcnci9hpru02ucli9eju0ta6uuoq14"
@@ -378,7 +378,7 @@ android {
 
         create("zs") {
             dimension = "app"
-            applicationId = "com.zsshop.app"
+            applicationId = "com.zsshopbd.app"
             resValue("string", "app_name", "ZS Shop")
             manifestPlaceholders["appAuthRedirectScheme"] =
                 "com.googleusercontent.apps.895753625041-pcnvuttdiu3oekaip8akh8r90g3fs39t"

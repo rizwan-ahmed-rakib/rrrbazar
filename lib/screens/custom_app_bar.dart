@@ -86,23 +86,6 @@ class _CustomAppBarState extends State<CustomAppBar> {
         children: [
           GestureDetector(
 
-            // onTap: () {
-            //   // 🏠 হোম স্ক্রিনে নিয়ে যাও
-            //   Navigator.pushReplacement(
-            //                   context,
-            //                   MaterialPageRoute(builder: (context) => HomeScreen()),
-            //                 );
-            // },
-
-            // onTap: () {
-            //   if (ModalRoute.of(context)?.settings.name == '/home') return;
-            //
-            //   Navigator.pushReplacement(
-            //     context,
-            //     MaterialPageRoute(builder: (_) => HomeScreen()),
-            //   );
-            // },
-
             onTap: () {
               // 🔹 যদি তুমি ইতিমধ্যে HomeScreen এ থাকো, কিছুই করবে না
               if (ModalRoute.of(context)?.settings.name == '/home') {
@@ -196,11 +179,21 @@ class _CustomAppBarState extends State<CustomAppBar> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const RegisterScreen()),
-                      );
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //       builder: (context) => const RegisterScreen()),
+                      // );
+
+                      // 🔹 যদি তুমি ইতিমধ্যে registrationScreen এ থাকো, কিছুই করবে না
+                      if (ModalRoute.of(context)?.settings.name == '/registerScreen') {
+                      // print("Already on registrationScreen — no need to reload");
+                      return;
+                      }
+
+                      // 🔹 নইলে registerScreen এ নিয়ে যাও
+                      // Navigator.pushReplacementNamed(context, '/registerScreen');
+                      Navigator.pushNamed(context, '/registerScreen');
                     },
 
                     style: TextButton.styleFrom(
@@ -219,11 +212,21 @@ class _CustomAppBarState extends State<CustomAppBar> {
                   const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const LoginScreen()),
-                      );
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //       builder: (context) => const LoginScreen()),
+                      // );
+
+
+                      // 🔹 যদি তুমি ইতিমধ্যে loginScreen এ থাকো, কিছুই করবে না
+                      if (ModalRoute.of(context)?.settings.name == '/login') {
+                      // print("Already on loginScreen — no need to reload");
+                      return;
+                      }
+                      // 🔹 নইলে login scrren এ নিয়ে যাও
+                      // Navigator.pushReplacementNamed(context, '/login');
+                      Navigator.pushNamed(context, '/login');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,

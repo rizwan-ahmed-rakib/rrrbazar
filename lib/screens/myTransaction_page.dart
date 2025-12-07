@@ -94,41 +94,152 @@ class _MyTransactionsPageState extends State<MyTransactionsPage> {
 
 
       // 🔥 Stack ব্যবহার করা হয়েছে Footer নিচে রাখার জন্য
-      body: Stack(
-        children: [
-          // 🔹 মূল কনটেন্ট
-          txProvider.isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : txProvider.hasError
-              ? const Center(child: Text("❌ ডাটা লোড ব্যর্থ হয়েছে"))
-              : txProvider.transactions.isEmpty
-              ? Column(
-            children: const [
-              Expanded(
-                child: Center(
-                  child: Text(
-                    "কোন ট্রান্সাকশন পাওয়া যায়নি",
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ),
+      // body: Stack(
+      //   children: [
+      //     // 🔹 মূল কনটেন্ট
+      //     txProvider.isLoading
+      //         ? const Center(child: CircularProgressIndicator())
+      //         : txProvider.hasError
+      //         ? const Center(child: Text("❌ ডাটা লোড ব্যর্থ হয়েছে"))
+      //         : txProvider.transactions.isEmpty
+      //         ? Column(
+      //       children: const [
+      //         Expanded(
+      //           child: Center(
+      //             child: Text(
+      //               "কোন ট্রান্সাকশন পাওয়া যায়নি",
+      //               style: TextStyle(fontSize: 16),
+      //             ),
+      //           ),
+      //         ),
+      //         CustomFooter(), // ✅ Footer নিচে থাকবে
+      //       ],
+      //     )
+      //         : Padding(
+      //       padding: const EdgeInsets.only(bottom: 70),
+      //       // Footer এর জায়গা রেখে Scrollable কনটেন্ট
+      //       child: SingleChildScrollView(
+      //         padding: const EdgeInsets.all(16),
+      //         child:
+      //         _buildTransactionTable(txProvider.transactions),
+      //       ),
+      //     ),
+      //
+      //     // 🔹 Footer নিচে স্থির থাকবে (সব সময় দৃশ্যমান বা শেষে দেখা যাবে)
+      //     const Align(
+      //       alignment: Alignment.bottomCenter,
+      //       child: CustomFooter(),
+      //     ),
+      //   ],
+      // ),
+
+
+      body: Builder(
+        builder: (context) {
+          if (txProvider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (txProvider.hasError) {
+            return _errorView(context);
+          } else if (txProvider.transactions.isEmpty) {
+            return _emptyView();
+          }
+
+          // ✅ শুধু একটি layout - Footer সবসময় content-এর পরে
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: MediaQuery.of(context).size.height, // ✅ Minimum screen height
               ),
-              CustomFooter(), // ✅ Footer নিচে থাকবে
-            ],
-          )
-              : Padding(
-            padding: const EdgeInsets.only(bottom: 70),
-            // Footer এর জায়গা রেখে Scrollable কনটেন্ট
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child:
-              _buildTransactionTable(txProvider.transactions),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    children: [
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(16),
+                          child: Text(
+                            "My Transactions",
+                            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      // Padding(
+                      //   padding: const EdgeInsets.all(16),
+                      //   child: Column(
+                      //     children: orderProvider.orders
+                      //         .map((order) => _buildOrderCard(order))
+                      //         .toList(),
+                      //   ),
+                      // ),
+
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 70),
+                        // Footer এর জায়গা রেখে Scrollable কনটেন্ট
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(16),
+                          child:
+                          _buildTransactionTable(txProvider.transactions),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // ✅ Footer সবসময় নিচে (কম elements থাকলে screen-এর নিচে, বেশি থাকলে content-এর পরে)
+                  const CustomFooter(),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+
+
+    );
+  }
+
+  Widget _emptyView() {
+    return Column(
+      children: const [
+        Expanded(
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.search, size: 70, color: Colors.grey),
+                SizedBox(height: 20),
+                Text("Sorry",
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+                SizedBox(height: 6),
+                Text("You don’t have any transaction yet.",
+                    style: TextStyle(fontSize: 16, color: Colors.grey)),
+              ],
             ),
           ),
+        ),
+        CustomFooter(),
+      ],
+    );
+  }
 
-          // 🔹 Footer নিচে স্থির থাকবে (সব সময় দৃশ্যমান বা শেষে দেখা যাবে)
-          const Align(
-            alignment: Alignment.bottomCenter,
-            child: CustomFooter(),
+  // 🔹 এরর ভিউ
+  Widget _errorView(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.error_outline, color: Colors.red, size: 60),
+          const SizedBox(height: 12),
+          const Text("Something went wrong!",
+              style: TextStyle(fontSize: 18, color: Colors.red)),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: () {
+              Provider.of<UserTransactionProvider>(context, listen: false).refreshTransactions();
+            },
+            child: const Text("Retry"),
           ),
         ],
       ),
